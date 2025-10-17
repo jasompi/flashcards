@@ -9,13 +9,15 @@ function FlashCard({ front, back, datasetName }) {
   const [audio, setAudio] = useState(null);
 
   // Sanitize filename to match Python's sanitize_filename function
+  // Python's isalnum() includes Unicode letters (á, ñ, etc.)
   const sanitizeFilename = (text) => {
     // Replace spaces with underscores
     let filename = text.replace(/ /g, '_');
     // Replace forward slashes with underscores
     filename = filename.replace(/\//g, '_');
-    // Remove other problematic characters (keep only alphanumeric, underscore, hyphen, period)
-    filename = filename.replace(/[^a-zA-Z0-9_\-.]/g, '');
+    // Remove other problematic characters (keep Unicode alphanumeric, underscore, hyphen, period)
+    // \p{L} matches any Unicode letter, \p{N} matches any Unicode digit
+    filename = filename.replace(/[^\p{L}\p{N}_\-.]/gu, '');
     return filename;
   };
 
