@@ -20,6 +20,17 @@ function FlashCard({ front, back, datasetName }) {
   };
 
   useEffect(() => {
+    // Stop any currently playing audio when card changes or component unmounts
+    return () => {
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [front, back]);
+
+  useEffect(() => {
     // Check if audio files exist for front and back
     const checkAudio = async () => {
       const frontFilename = sanitizeFilename(front);
@@ -63,25 +74,30 @@ function FlashCard({ front, back, datasetName }) {
   }, [front, back, datasetName, autoPlay]);
 
   const handleFlip = () => {
+    // Stop current audio immediately when flipping
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+
     setIsFlipped(!isFlipped);
 
-    // Auto-play audio for the back side when flipping if auto-play is enabled
-    if (autoPlay && !isFlipped && audioAvailable.back) {
-      const filename = sanitizeFilename(back);
-      const audioPath = `/data/${datasetName}/${filename}.wav`;
+    // Auto-play audio for the new side when flipping if auto-play is enabled
+    if (autoPlay) {
+      const targetText = !isFlipped ? back : front;
+      const targetAvailable = !isFlipped ? audioAvailable.back : audioAvailable.front;
 
-      // Stop current audio
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
+      if (targetAvailable) {
+        const filename = sanitizeFilename(targetText);
+        const audioPath = `/data/${datasetName}/${filename}.wav`;
+
+        // Play audio for the new side
+        const newAudio = new Audio(audioPath);
+        setAudio(newAudio);
+        newAudio.play().catch(err => {
+          console.error('Error auto-playing audio:', err);
+        });
       }
-
-      // Play back audio
-      const newAudio = new Audio(audioPath);
-      setAudio(newAudio);
-      newAudio.play().catch(err => {
-        console.error('Error auto-playing audio:', err);
-      });
     }
   };
 
