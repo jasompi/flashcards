@@ -18,6 +18,9 @@ function Study() {
   const [error, setError] = useState(null);
   const [isFlipped, setIsFlipped] = useState(false); // Control flip state from parent
   const [isTransitioning, setIsTransitioning] = useState(false); // For fade effect
+  const [isTestMode, setIsTestMode] = useState(false); // Track if in test mode
+  const [testFailedCards, setTestFailedCards] = useState(new Set()); // Cards marked "Not Yet" in test
+  const [testCompleted, setTestCompleted] = useState(false); // Track if test is completed
 
   useEffect(() => {
     const loadCSV = async () => {
@@ -69,10 +72,58 @@ function Study() {
     setActiveDeck(cards.map((_, index) => index));
     setCurrentDeckIndex(0);
     setHistory([]); // Clear history on reset
+    setIsTestMode(false);
+    setTestFailedCards(new Set());
+    setTestCompleted(false);
+  };
+
+  const handleStartTest = () => {
+    // Reset memorized state
+    setMemorized(new Set());
+    setTestFailedCards(new Set());
+    setTestCompleted(false);
+
+    // Shuffle all cards
+    const allCards = cards.map((_, index) => index);
+    const shuffled = [...allCards];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    // Start test mode
+    setActiveDeck(shuffled);
+    setCurrentDeckIndex(0);
+    setHistory([]);
+    setIsTestMode(true);
   };
 
   const handlePrevious = () => {
-    if (history.length === 0) return;
+    // Fade out content
+    setIsTransitioning(true);
+
+    // If card is flipped, flip to front first
+    if (isFlipped) {
+      setIsFlipped(false);
+    }
+
+    // Wait 300ms (fade out + half flip) before updating card
+    setTimeout(() => {
+      updatePrevious();
+      // Fade in new content after a brief moment
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50);
+    }, 300);
+  };
+
+  const updatePrevious = () => {
+    if (history.length === 0) {
+      // Loop to end of deck if no history
+      const prevIndex = currentDeckIndex === 0 ? activeDeck.length - 1 : currentDeckIndex - 1;
+      setCurrentDeckIndex(prevIndex);
+      return;
+    }
 
     // Get the previous state from history
     const previousState = history[history.length - 1];
@@ -129,10 +180,25 @@ function Study() {
     const newDeck = activeDeck.filter((_, idx) => idx !== currentDeckIndex);
     setActiveDeck(newDeck);
 
-    // Adjust current index if needed
-    if (currentDeckIndex >= newDeck.length && newDeck.length > 0) {
-      setCurrentDeckIndex(newDeck.length - 1);
+    // In test mode, check if test is complete
+    if (isTestMode && newDeck.length === 0) {
+      setTestCompleted(true);
+    } else {
+      // Adjust current index if needed
+      if (currentDeckIndex >= newDeck.length && newDeck.length > 0) {
+        setCurrentDeckIndex(newDeck.length - 1);
+      }
     }
+  };
+
+  const handleReviewFailedCards = () => {
+    // Reset for review of failed cards
+    const failedCardIndices = Array.from(testFailedCards);
+    setActiveDeck(failedCardIndices);
+    setCurrentDeckIndex(0);
+    setTestCompleted(false);
+    setIsTestMode(false); // Exit test mode for review
+    setTestFailedCards(new Set());
   };
 
   const handleNotMemorized = () => {
@@ -158,30 +224,80 @@ function Study() {
     // Save state to history before making changes
     saveToHistory();
 
-    // Move to next card and reinsert current card back into deck at random position
     const currentCardIndex = activeDeck[currentDeckIndex];
-    const newDeck = [...activeDeck];
 
-    // Remove current card
-    newDeck.splice(currentDeckIndex, 1);
+    if (isTestMode) {
+      // In test mode: mark as failed and remove from deck (don't reinsert)
+      const newFailedCards = new Set(testFailedCards);
+      newFailedCards.add(currentCardIndex);
+      setTestFailedCards(newFailedCards);
 
-    // Insert at random position after current position
-    const remainingCards = newDeck.length - currentDeckIndex;
-    if (remainingCards > 0) {
-      const randomOffset = Math.floor(Math.random() * Math.min(remainingCards, 5)) + 1;
-      const insertPosition = Math.min(currentDeckIndex + randomOffset, newDeck.length);
-      newDeck.splice(insertPosition, 0, currentCardIndex);
+      // Remove from active deck
+      const newDeck = activeDeck.filter((_, idx) => idx !== currentDeckIndex);
+      setActiveDeck(newDeck);
+
+      // Check if test is complete
+      if (newDeck.length === 0) {
+        setTestCompleted(true);
+      } else {
+        // Adjust current index if needed
+        if (currentDeckIndex >= newDeck.length) {
+          setCurrentDeckIndex(newDeck.length - 1);
+        }
+      }
     } else {
-      // If at end, add to end
-      newDeck.push(currentCardIndex);
+      // In study mode: reinsert card at random position
+      const newDeck = [...activeDeck];
+
+      // Remove current card
+      newDeck.splice(currentDeckIndex, 1);
+
+      // Insert at random position after current position
+      const remainingCards = newDeck.length - currentDeckIndex;
+      if (remainingCards > 0) {
+        const randomOffset = Math.floor(Math.random() * Math.min(remainingCards, 5)) + 1;
+        const insertPosition = Math.min(currentDeckIndex + randomOffset, newDeck.length);
+        newDeck.splice(insertPosition, 0, currentCardIndex);
+      } else {
+        // If at end, add to end
+        newDeck.push(currentCardIndex);
+      }
+
+      setActiveDeck(newDeck);
+
+      // Stay at same index (shows next card)
+      if (currentDeckIndex >= newDeck.length) {
+        setCurrentDeckIndex(0);
+      }
+    }
+  };
+
+  const handleNext = () => {
+    // Fade out content
+    setIsTransitioning(true);
+
+    // If card is flipped, flip to front first
+    if (isFlipped) {
+      setIsFlipped(false);
     }
 
-    setActiveDeck(newDeck);
+    // Wait 300ms (fade out + half flip) before updating card
+    setTimeout(() => {
+      updateNext();
+      // Fade in new content after a brief moment
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50);
+    }, 300);
+  };
 
-    // Stay at same index (shows next card)
-    if (currentDeckIndex >= newDeck.length) {
-      setCurrentDeckIndex(0);
-    }
+  const updateNext = () => {
+    // Save state to history before making changes
+    saveToHistory();
+
+    // Move to next card (wrap around to beginning if at end)
+    const nextIndex = (currentDeckIndex + 1) % activeDeck.length;
+    setCurrentDeckIndex(nextIndex);
   };
 
   const handleBack = () => {
@@ -210,13 +326,58 @@ function Study() {
     );
   }
 
+  // Check if test is completed
+  if (testCompleted) {
+    const totalCards = cards.length;
+    const failedCount = testFailedCards.size;
+    const correctCount = totalCards - failedCount;
+    const score = ((correctCount / totalCards) * 100).toFixed(0);
+    const isPerfectScore = failedCount === 0;
+
+    return (
+      <div className="study">
+        <SettingsPanel />
+        <button className="back-button" onClick={handleBack}>
+          ← Home
+        </button>
+        <div className={`completion-message ${isPerfectScore ? 'perfect-score' : ''}`}>
+          {isPerfectScore ? (
+            <>
+              <h2 className="celebration">🎊 Perfect Score! 🎊</h2>
+              <p className="score-text">You got all {totalCards} cards correct!</p>
+            </>
+          ) : (
+            <>
+              <h2>Test Complete!</h2>
+              <p className="score-text">Score: {correctCount}/{totalCards} ({score}%)</p>
+              <p>{failedCount} card{failedCount !== 1 ? 's' : ''} to review</p>
+            </>
+          )}
+          <div className="test-controls">
+            {!isPerfectScore && (
+              <button className="nav-button review-button" onClick={handleReviewFailedCards}>
+                🔍 Review Failed Cards
+              </button>
+            )}
+            <button className="nav-button retake-button" onClick={handleStartTest}>
+              📝 Retake Test
+            </button>
+            <button className="nav-button" onClick={handleBack}>
+              ← Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Check if all cards are memorized
   if (activeDeck.length === 0) {
     return (
       <div className="study">
         <SettingsPanel />
         <button className="back-button" onClick={handleBack}>
-          ← Back to Home
+          ← Home
         </button>
         <div className="completion-message">
           <h2>🎉 Congratulations!</h2>
@@ -225,7 +386,7 @@ function Study() {
             Start Over
           </button>
           <button className="nav-button" onClick={handleBack}>
-            Back to Home
+            ← Home
           </button>
         </div>
       </div>
@@ -239,7 +400,7 @@ function Study() {
     <div className="study">
       <SettingsPanel />
       <button className="back-button" onClick={handleBack}>
-        ← Back to Home
+        ← Home
       </button>
 
       <div className="progress">
@@ -259,34 +420,43 @@ function Study() {
       <div className="navigation">
         <button
           onClick={handlePrevious}
-          disabled={history.length === 0}
           className="nav-button previous-button"
           title="Go back to previous card"
         >
-          ← Previous
+          ←<span className="button-text"> Previous</span>
         </button>
         <button
           onClick={handleNotMemorized}
           className="nav-button x-button"
           title="Not memorized - card will reappear"
         >
-          ✗ Not Yet
+          ✗<span className="button-text"> Not Yet</span>
         </button>
         <button
           onClick={handleMemorized}
           className="nav-button check-button"
           title="Memorized - remove from deck"
         >
-          ✓ Got It
+          ✓<span className="button-text"> Got It</span>
+        </button>
+        <button
+          onClick={handleNext}
+          className="nav-button next-button"
+          title="Skip to next card without marking"
+        >
+          <span className="button-text">Next </span>→
         </button>
       </div>
 
       <div className="deck-controls">
         <button onClick={shuffleDeck} className="deck-button shuffle-button">
-          🔀 Shuffle Deck
+          ⇄<span className="button-text"> Shuffle</span>
         </button>
         <button onClick={resetDeck} className="deck-button reset-button">
-          ↺ Reset All
+          ⏻<span className="button-text"> Reset</span>
+        </button>
+        <button onClick={handleStartTest} className="deck-button test-button">
+          📝<span className="button-text"> Test</span>
         </button>
       </div>
     </div>

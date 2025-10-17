@@ -14,16 +14,19 @@
   left: 20px;
   padding: 10px 20px;
   font-size: 1rem;
-  background-color: #95a5a6;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .back-button:hover {
-  background-color: #7f8c8d;
+  background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
 
 .progress {
@@ -77,19 +80,23 @@
 }
 
 .previous-button {
-  background-color: #95a5a6;
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
 }
 
-.previous-button:hover:not(:disabled) {
-  background-color: #7f8c8d;
+.previous-button:hover {
+  background: linear-gradient(135deg, #8e44ad 0%, #7d3c98 100%);
   transform: translateY(-2px);
   box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
 }
 
-.previous-button:disabled {
-  background-color: #bdc3c7;
-  cursor: not-allowed;
-  opacity: 0.5;
+.next-button {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+.next-button:hover {
+  background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
 }
 
 .deck-controls {
@@ -103,7 +110,7 @@
 .deck-button {
   padding: 10px 24px;
   font-size: 1rem;
-  background-color: #95a5a6;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
   color: white;
   border: none;
   border-radius: 5px;
@@ -114,7 +121,7 @@
 }
 
 .deck-button:hover {
-  background-color: #7f8c8d;
+  background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
@@ -135,6 +142,88 @@
   border-radius: 20px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   max-width: 500px;
+}
+
+.completion-message.perfect-score {
+  background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes celebrate {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.1) rotate(-5deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(5deg);
+  }
+  75% {
+    transform: scale(1.1) rotate(-5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.celebration {
+  animation: celebrate 1s ease-in-out;
+}
+
+.score-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 1rem 0;
+  color: #2c3e50;
+}
+
+.test-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  align-items: center;
+}
+
+.test-controls .nav-button {
+  min-width: 250px;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+}
+
+.test-controls .nav-button:hover {
+  background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+  transform: translateY(-2px);
+}
+
+.test-controls .review-button {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.test-controls .review-button:hover {
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+}
+
+.test-controls .retake-button {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+}
+
+.test-controls .retake-button:hover {
+  background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
+}
+
+.test-button:hover {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
 }
 
 .completion-message h2 {
@@ -161,11 +250,32 @@
 
 @media (max-width: 768px) {
   .navigation {
-    gap: 1rem;
+    gap: 0.5rem;
+    width: 90vw;
+    max-width: 400px;
   }
 
   .nav-button {
-    padding: 10px 20px;
+    padding: 14px 8px;
+    font-size: 1.2rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Hide button text labels only for navigation buttons on narrow screens */
+  .navigation .button-text {
+    display: none;
+  }
+
+  .deck-controls {
+    gap: 0.5rem;
+    width: 90vw;
+    max-width: 400px;
+  }
+
+  .deck-button {
+    padding: 12px 8px;
     font-size: 1rem;
+    flex: 1;
   }
 }
