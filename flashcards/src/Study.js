@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSettings } from './SettingsContext';
 import FlashCard from './FlashCard';
+import SettingsPanel from './components/SettingsPanel';
 import './Study.css';
 
 function Study() {
   const { filename } = useParams();
   const navigate = useNavigate();
+  const { showSpanishFirst } = useSettings();
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -78,6 +81,7 @@ function Study() {
 
   return (
     <div className="study">
+      <SettingsPanel />
       <button className="back-button" onClick={handleBack}>
         ← Back to Home
       </button>
@@ -87,8 +91,8 @@ function Study() {
       </div>
 
       <FlashCard
-        front={cards[currentIndex].front}
-        back={cards[currentIndex].back}
+        front={showSpanishFirst ? cards[currentIndex].front : cards[currentIndex].back}
+        back={showSpanishFirst ? cards[currentIndex].back : cards[currentIndex].front}
         datasetName={filename.replace('.csv', '')}
       />
 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useSettings } from './SettingsContext';
 import './FlashCard.css';
 
 function FlashCard({ front, back, datasetName }) {
+  const { autoPlay } = useSettings();
   const [isFlipped, setIsFlipped] = useState(false);
   const [audioAvailable, setAudioAvailable] = useState({ front: false, back: false });
   const [audio, setAudio] = useState(null);
@@ -41,15 +43,46 @@ function FlashCard({ front, back, datasetName }) {
       ]);
 
       setAudioAvailable({ front: frontExists, back: backExists });
+
+      // Auto-play front audio if enabled and available
+      if (autoPlay && frontExists) {
+        const newAudio = new Audio(frontPath);
+        setAudio(newAudio);
+        newAudio.play().catch(err => {
+          console.error('Error auto-playing audio:', err);
+        });
+      }
     };
 
     if (datasetName) {
       checkAudio();
     }
-  }, [front, back, datasetName]);
+
+    // Reset flip state when card changes
+    setIsFlipped(false);
+  }, [front, back, datasetName, autoPlay]);
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
+
+    // Auto-play audio for the back side when flipping if auto-play is enabled
+    if (autoPlay && !isFlipped && audioAvailable.back) {
+      const filename = sanitizeFilename(back);
+      const audioPath = `/data/${datasetName}/${filename}.wav`;
+
+      // Stop current audio
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+
+      // Play back audio
+      const newAudio = new Audio(audioPath);
+      setAudio(newAudio);
+      newAudio.play().catch(err => {
+        console.error('Error auto-playing audio:', err);
+      });
+    }
   };
 
   const handlePlayAudio = (e) => {

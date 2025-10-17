@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import SettingsPanel from './components/SettingsPanel';
 import './Home.css';
 
 function Home() {
@@ -35,6 +36,7 @@ function Home() {
   if (loading) {
     return (
       <div className="home">
+        <SettingsPanel />
         <h1>Spanish Flashcards</h1>
         <p>Loading...</p>
       </div>
@@ -44,6 +46,7 @@ function Home() {
   if (error) {
     return (
       <div className="home">
+        <SettingsPanel />
         <h1>Spanish Flashcards</h1>
         <p className="error">Error: {error}</p>
       </div>
@@ -52,6 +55,7 @@ function Home() {
 
   return (
     <div className="home">
+      <SettingsPanel />
       <h1>Spanish Flashcards</h1>
       <p>Select a topic to study:</p>
       <div className="file-list">
