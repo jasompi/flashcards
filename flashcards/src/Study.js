@@ -16,6 +16,8 @@ function Study() {
   const [history, setHistory] = useState([]); // History of shown cards for undo
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFlipped, setIsFlipped] = useState(false); // Control flip state from parent
+  const [isTransitioning, setIsTransitioning] = useState(false); // For fade effect
 
   useEffect(() => {
     const loadCSV = async () => {
@@ -45,6 +47,11 @@ function Study() {
 
     loadCSV();
   }, [filename]);
+
+  // Reset flip state when card changes
+  useEffect(() => {
+    setIsFlipped(false);
+  }, [currentDeckIndex]);
 
   const shuffleDeck = () => {
     const shuffled = [...activeDeck];
@@ -89,6 +96,25 @@ function Study() {
   };
 
   const handleMemorized = () => {
+    // Fade out content
+    setIsTransitioning(true);
+
+    // If card is flipped, flip to front first
+    if (isFlipped) {
+      setIsFlipped(false);
+    }
+
+    // Wait 300ms (fade out + half flip) before updating card
+    setTimeout(() => {
+      updateMemorized();
+      // Fade in new content after a brief moment
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50);
+    }, 300);
+  };
+
+  const updateMemorized = () => {
     // Save state to history before making changes
     saveToHistory();
 
@@ -110,6 +136,25 @@ function Study() {
   };
 
   const handleNotMemorized = () => {
+    // Fade out content
+    setIsTransitioning(true);
+
+    // If card is flipped, flip to front first
+    if (isFlipped) {
+      setIsFlipped(false);
+    }
+
+    // Wait 300ms (fade out + half flip) before updating card
+    setTimeout(() => {
+      updateNotMemorized();
+      // Fade in new content after a brief moment
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50);
+    }, 300);
+  };
+
+  const updateNotMemorized = () => {
     // Save state to history before making changes
     saveToHistory();
 
@@ -206,6 +251,9 @@ function Study() {
         front={showSpanishFirst ? currentCard.front : currentCard.back}
         back={showSpanishFirst ? currentCard.back : currentCard.front}
         datasetName={filename.replace('.csv', '')}
+        isFlipped={isFlipped}
+        setIsFlipped={setIsFlipped}
+        isTransitioning={isTransitioning}
       />
 
       <div className="navigation">

@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useSettings } from './SettingsContext';
 import './FlashCard.css';
 
-function FlashCard({ front, back, datasetName }) {
+function FlashCard({ front, back, datasetName, isFlipped, setIsFlipped, isTransitioning }) {
   const { autoPlay } = useSettings();
-  const [isFlipped, setIsFlipped] = useState(false);
   const [audioAvailable, setAudioAvailable] = useState({ front: false, back: false });
   const [audio, setAudio] = useState(null);
 
@@ -70,9 +69,6 @@ function FlashCard({ front, back, datasetName }) {
     if (datasetName) {
       checkAudio();
     }
-
-    // Reset flip state when card changes
-    setIsFlipped(false);
   }, [front, back, datasetName, autoPlay]);
 
   const handleFlip = () => {
@@ -136,7 +132,7 @@ function FlashCard({ front, back, datasetName }) {
           >
             🔊
           </button>
-          <div className="card-content">
+          <div className={`card-content ${isTransitioning ? 'transitioning' : ''}`}>
             {front}
           </div>
         </div>
@@ -149,7 +145,7 @@ function FlashCard({ front, back, datasetName }) {
           >
             🔊
           </button>
-          <div className="card-content">
+          <div className={`card-content ${isTransitioning ? 'transitioning' : ''}`}>
             {back}
           </div>
         </div>

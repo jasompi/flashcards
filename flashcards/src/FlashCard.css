@@ -79,6 +79,12 @@
   text-align: center;
   word-wrap: break-word;
   max-width: 100%;
+  transition: opacity 0.3s ease;
+  opacity: 1;
+}
+
+.card-content.transitioning {
+  opacity: 0;
 }
 
 @media (max-width: 768px) {
