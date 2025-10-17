@@ -98,6 +98,16 @@ function Study() {
     setIsTestMode(true);
   };
 
+  const handleCompleteTest = () => {
+    // Mark all remaining cards as failed
+    const remainingCards = new Set([...testFailedCards, ...activeDeck]);
+    setTestFailedCards(remainingCards);
+
+    // Clear active deck to trigger completion
+    setActiveDeck([]);
+    setTestCompleted(true);
+  };
+
   const handlePrevious = () => {
     // Fade out content
     setIsTransitioning(true);
@@ -449,15 +459,23 @@ function Study() {
       </div>
 
       <div className="deck-controls">
-        <button onClick={shuffleDeck} className="deck-button shuffle-button">
-          ⇄<span className="button-text"> Shuffle</span>
-        </button>
-        <button onClick={resetDeck} className="deck-button reset-button">
-          ⏻<span className="button-text"> Reset</span>
-        </button>
-        <button onClick={handleStartTest} className="deck-button test-button">
-          📝<span className="button-text"> Test</span>
-        </button>
+        {isTestMode ? (
+          <button onClick={handleCompleteTest} className="deck-button complete-button">
+            ✓<span className="button-text"> Complete Test</span>
+          </button>
+        ) : (
+          <>
+            <button onClick={shuffleDeck} className="deck-button shuffle-button">
+              ⇄<span className="button-text"> Shuffle</span>
+            </button>
+            <button onClick={resetDeck} className="deck-button reset-button">
+              ⏻<span className="button-text"> Reset</span>
+            </button>
+            <button onClick={handleStartTest} className="deck-button test-button">
+              📝<span className="button-text"> Test</span>
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

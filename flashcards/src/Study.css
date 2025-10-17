@@ -5,6 +5,7 @@
   justify-content: center;
   min-height: 100vh;
   padding: 20px;
+  padding-top: 100px; /* Increased to accommodate settings panel */
   position: relative;
 }
 
@@ -131,8 +132,12 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.shuffle-button:hover {
-  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+.complete-button {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+}
+
+.complete-button:hover {
+  background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
 }
 
 .completion-message {
@@ -222,10 +227,6 @@
   background: linear-gradient(135deg, #229954 0%, #27ae60 100%);
 }
 
-.test-button:hover {
-  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-}
-
 .completion-message h2 {
   font-size: 2.5rem;
   margin-bottom: 1rem;
@@ -249,6 +250,10 @@
 }
 
 @media (max-width: 768px) {
+  .study {
+    padding-top: 90px; /* Adjusted for mobile settings panel */
+  }
+
   .navigation {
     gap: 0.5rem;
     width: 90vw;
