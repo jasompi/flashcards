@@ -2,6 +2,12 @@
 
 This project contains tools for learning Spanish, including a React flashcard application and audio generation scripts.
 
+## Live Demo
+
+**Try the app:** https://spanish-flashcards.jpimobile.com
+
+The flashcard app is deployed on a Raspberry Pi server running Apache.
+
 ## Flash Card App
 
 An interactive React application that helps kids learn Spanish vocabulary and geography using flashcards.
