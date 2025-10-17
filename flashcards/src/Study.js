@@ -89,6 +89,7 @@ function Study() {
       <FlashCard
         front={cards[currentIndex].front}
         back={cards[currentIndex].back}
+        datasetName={filename.replace('.csv', '')}
       />
 
       <div className="navigation">

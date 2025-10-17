@@ -25,6 +25,7 @@ import sys
 import argparse
 from pathlib import Path
 from dotenv import load_dotenv
+from tqdm import tqdm
 
 # Load environment variables from .env file
 load_dotenv()
@@ -115,6 +116,25 @@ def generate_audio_pcm(text, retries=5, backoff_factor=1):
     for i in range(retries):
         try:
             response = requests.post(url, headers={'Content-Type': 'application/json'}, data=json.dumps(payload))
+
+            # Handle 429 rate limit errors with longer backoff
+            if response.status_code == 429:
+                retry_after = response.headers.get('Retry-After')
+                if retry_after:
+                    delay = int(retry_after)
+                    print(f"⚠ Rate limit hit for '{text}'. Waiting {delay}s (from Retry-After header)...")
+                else:
+                    # Use exponential backoff with minimum 2 seconds for rate limits
+                    delay = max(2, backoff_factor * (2 ** i))
+                    print(f"⚠ Rate limit hit for '{text}'. Waiting {delay}s before retry {i + 1}/{retries}...")
+
+                if i < retries - 1:
+                    time.sleep(delay)
+                    continue
+                else:
+                    print(f"✗ Maximum retries reached for '{text}' due to rate limiting. Skipping.")
+                    return None, None
+
             response.raise_for_status()
 
             result = response.json()
@@ -141,7 +161,7 @@ def generate_audio_pcm(text, retries=5, backoff_factor=1):
     return None, None
 
 
-def generate_and_save_audio(text, output_filename, pause_duration_ms=500, retries=5, backoff_factor=1):
+def generate_and_save_audio(text, output_filename, pause_duration_ms=500, retries=5, backoff_factor=1, quiet=False):
     """
     Generates audio from text using the Gemini TTS API and saves it as a WAV file.
     Handles "/" separator by generating audio for each part with pauses in between.
@@ -153,13 +173,13 @@ def generate_and_save_audio(text, output_filename, pause_duration_ms=500, retrie
         pause_duration_ms (int): Duration of pause between phrases in milliseconds (default 500ms).
         retries (int): The number of times to retry the API call on failure.
         backoff_factor (int): The backoff factor for exponential retry delay.
+        quiet (bool): If True, suppress informational messages.
 
     Returns:
         bool: True if successful, False otherwise.
     """
     # Check if the file already exists to avoid redundant API calls
     if os.path.exists(output_filename):
-        print(f"✓ File '{output_filename}' already exists. Skipping.")
         return True
 
     # Check if text contains "/" separator
@@ -168,10 +188,9 @@ def generate_and_save_audio(text, output_filename, pause_duration_ms=500, retrie
         parts = [part.strip() for part in text.split('/') if part.strip()]
 
         if not parts:
-            print(f"✗ Error: No valid text parts found in '{text}'.")
+            if not quiet:
+                print(f"✗ Error: No valid text parts found in '{text}'.")
             return False
-
-        print(f"  → Generating {len(parts)} parts with pauses...")
 
         # Generate audio for each part
         combined_pcm = b''
@@ -181,13 +200,15 @@ def generate_and_save_audio(text, output_filename, pause_duration_ms=500, retrie
             pcm_data, rate = generate_audio_pcm(part, retries, backoff_factor)
 
             if pcm_data is None:
-                print(f"✗ Failed to generate audio for part '{part}'.")
+                if not quiet:
+                    print(f"✗ Failed to generate audio for part '{part}'.")
                 return False
 
             if sample_rate is None:
                 sample_rate = rate
             elif sample_rate != rate:
-                print(f"✗ Error: Sample rate mismatch ({sample_rate} vs {rate}).")
+                if not quiet:
+                    print(f"✗ Error: Sample rate mismatch ({sample_rate} vs {rate}).")
                 return False
 
             # Add PCM data
@@ -203,7 +224,6 @@ def generate_and_save_audio(text, output_filename, pause_duration_ms=500, retrie
         with open(output_filename, 'wb') as f:
             f.write(wav_data)
 
-        print(f"✓ Generated: {output_filename} (combined {len(parts)} parts)")
         return True
 
     else:
@@ -218,7 +238,6 @@ def generate_and_save_audio(text, output_filename, pause_duration_ms=500, retrie
         with open(output_filename, 'wb') as f:
             f.write(wav_data)
 
-        print(f"✓ Generated: {output_filename}")
         return True
 
 
@@ -282,22 +301,25 @@ def process_csv(csv_path):
         words = sorted(words)  # Sort for consistent ordering
         total_count = len(words)
 
-        print(f"Found {total_count} unique words to process.\n")
-
-        # Generate audio for each word
+        # Generate audio for each word with progress bar
         success_count = 0
-        for idx, word in enumerate(words, 1):
-            word_str = str(word).strip()
-            if not word_str:
-                continue
+        with tqdm(total=total_count, desc="Generating audio", unit="file",
+                  bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]') as pbar:
+            for word in words:
+                word_str = str(word).strip()
+                if not word_str:
+                    continue
 
-            filename = sanitize_filename(word_str) + '.wav'
-            output_path = output_dir / filename
+                filename = sanitize_filename(word_str) + '.wav'
+                output_path = output_dir / filename
 
-            print(f"[{idx}/{total_count}] Processing '{word_str}'...")
+                # Update progress bar description with current word
+                pbar.set_postfix_str(f"'{word_str}' -> {filename}", refresh=True)
 
-            if generate_and_save_audio(word_str, str(output_path)):
-                success_count += 1
+                if generate_and_save_audio(word_str, str(output_path), quiet=True):
+                    success_count += 1
+
+                pbar.update(1)
 
         print(f"\n{'='*60}")
         print(f"✓ Complete: {success_count}/{total_count} files generated successfully")

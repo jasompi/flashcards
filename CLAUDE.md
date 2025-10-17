@@ -27,11 +27,19 @@ uv run tools/generate_flashcard_audio.py <csv_file_path>
 Examples:
 ```bash
 # Generate audio for vocabulary words
-uv run tools/generate_flashcard_audio.py data/words.csv
+uv run tools/generate_flashcard_audio.py flashcards/public/data/vocabulary_level_1.csv
 
 # Generate audio for countries and capitals
 uv run tools/generate_flashcard_audio.py flashcards/public/data/spanish_speaking_countries_and_capitals.csv
 ```
+
+### Manifest Management
+Update the flashcard app's manifest when CSV files are added, removed, or renamed:
+```bash
+uv run tools/update_manifest.py
+```
+
+This automatically scans `flashcards/public/data/` for CSV files and updates `manifest.json`, which the React app uses to display available flashcard sets on the home page.
 
 Legacy scripts (specific to one CSV):
 ```bash
@@ -44,16 +52,28 @@ uv run main.py  # Entry point (minimal)
 
 - `flashcards/` - React flashcard application
   - `src/` - React components (App, Home, Study, FlashCard)
-  - `public/data/` - CSV data files and audio folders
+  - `public/data/` - CSV data files, audio folders, and manifest.json
+    - `manifest.json` - Auto-generated list of available CSV files (updated by `update_manifest.py`)
 - `tools/` - Utility scripts
   - `generate_flashcard_audio.py` - Generic tool to generate audio for any CSV flashcard file
-- `data/` - Source CSV data files
-  - `words.csv` - Spanish-English vocabulary pairs
-  - `spanish_speaking_countries_and_capitals.csv` - Countries and their capitals
+  - `update_manifest.py` - Updates manifest.json with available CSV files
+- `data/` - Source CSV data files (legacy location)
 - `main.py` - Entry point (currently minimal)
 - `start.sh` - Launch script for flashcard app
 - `.env` - Environment variables (API keys) - **DO NOT COMMIT**
 - `.env.example` - Template for environment variables
+
+## Flashcard App Dynamic Loading
+
+The React app dynamically loads CSV files from `flashcards/public/data/manifest.json`. When you add, remove, or rename CSV files in the `flashcards/public/data/` folder:
+
+1. Run `uv run tools/update_manifest.py` to regenerate the manifest
+2. Reload the home page to see the updated list
+
+The app automatically:
+- Displays human-readable names (e.g., "Vocabulary Level 1" from `vocabulary_level_1.csv`)
+- Checks for audio file availability and disables the play button if audio doesn't exist
+- Loads audio from the folder matching the CSV filename (without .csv extension)
 
 ## API Configuration
 
@@ -83,8 +103,8 @@ The `tools/generate_flashcard_audio.py` script:
 Example folder structure after running:
 ```
 flashcards/public/data/
-├── words.csv
-├── words/
+├── vocabulary_level_1.csv
+├── vocabulary_level_1/
 │   ├── el_muchacho.wav
 │   ├── boy.wav
 │   └── ...

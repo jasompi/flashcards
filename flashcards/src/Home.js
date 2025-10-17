@@ -4,20 +4,51 @@ import './Home.css';
 
 function Home() {
   const [csvFiles, setCsvFiles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // List of CSV files in the data folder
-    const files = [
-      { name: 'Words', file: 'words.csv' },
-      { name: 'Countries & Capitals', file: 'spanish_speaking_countries_and_capitals.csv' }
-    ];
-    setCsvFiles(files);
+    // Load CSV files from manifest
+    const loadManifest = async () => {
+      try {
+        const response = await fetch('/data/manifest.json');
+        if (!response.ok) {
+          throw new Error('Failed to load manifest');
+        }
+        const files = await response.json();
+        setCsvFiles(files);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    loadManifest();
   }, []);
 
   const handleFileSelect = (file) => {
     navigate(`/study/${file}`);
   };
+
+  if (loading) {
+    return (
+      <div className="home">
+        <h1>Spanish Flashcards</h1>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="home">
+        <h1>Spanish Flashcards</h1>
+        <p className="error">Error: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="home">
