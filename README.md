@@ -62,7 +62,16 @@ The flashcard app uses CSV files located in `flashcards/public/data/`:
 
 ## Audio Generation Tools
 
-Python scripts that generate Spanish audio pronunciations using Google's Gemini TTS API.
+Python scripts that generate Spanish audio pronunciations using Google's Gemini TTS API with Google Cloud Text-to-Speech as a fallback.
+
+### Features
+
+- **Dual API Support**: Automatically tries Gemini TTS first, falls back to Google Cloud TTS if needed
+- **Language Detection**: Automatically detects language from CSV column headers
+- **Multi-language Support**: Spanish (es-US) and English (en-US) voices
+- **Voice Options**: Neural2 (high-quality) or WaveNet (premium) voices
+- **Click-free Audio**: Implements SSML silence padding and audio trimming to eliminate initial click sounds
+- **Test Mode**: Test TTS APIs before generating full audio sets
 
 ### Generic Audio Generator (Recommended)
 
@@ -85,9 +94,11 @@ uv run tools/generate_flashcard_audio.py flashcards/public/data/spanish_speaking
 The script will:
 
 - Read all unique words from both columns of the CSV
+- Detect language automatically based on column headers (Spanish/English)
 - Create an output folder with the same name as the CSV file (without .csv)
-- Generate WAV files for each word
+- Generate WAV files for each word using appropriate language voice
 - Skip files that already exist to avoid redundant API calls
+- Automatically fallback to Google Cloud TTS if Gemini API fails
 
 **Output Structure:**
 
@@ -105,9 +116,40 @@ flashcards/public/data/
     +-- ...
 ```
 
+### Test Mode
+
+Test TTS APIs before generating audio for full CSV files:
+
+```bash
+# Test with auto fallback (default: Neural2 voice)
+uv run tools/generate_flashcard_audio.py --test "Hola mundo"
+uv run tools/generate_flashcard_audio.py --test "Hello world" --lang en
+
+# Test specific API
+uv run tools/generate_flashcard_audio.py --test "Buenos días" --api gemini
+uv run tools/generate_flashcard_audio.py --test "Good morning" --lang en --api cloud
+
+# Test with WaveNet voice
+uv run tools/generate_flashcard_audio.py --test "Hello world" --lang en --voice-type wavenet
+```
+
+**Test Mode Options:**
+- `--test TEXT`: Text to generate audio for
+- `--lang {es,en}`: Language (default: es)
+- `--api {gemini,cloud,auto}`: API to use (default: auto)
+- `--voice-type {neural2,wavenet}`: Voice type for Google Cloud TTS (default: neural2)
+
+Audio files are saved to `/tmp/spanish_tts_test/` with timestamp for comparison.
+
 ### Configuration
 
-**API Key Setup:**
+**API Keys Setup:**
+
+This project uses two TTS APIs:
+1. **Google Gemini TTS** (primary) - Uses Leda voice for Spanish
+2. **Google Cloud Text-to-Speech** (fallback) - Uses Neural2/WaveNet voices
+
+**Step 1: Gemini API Key**
 
 1. Create a `.env` file in the project root:
 
@@ -123,11 +165,38 @@ flashcards/public/data/
 
    Get your API key from: https://makersuite.google.com/app/apikey
 
-The TTS API uses:
+**Step 2: Google Cloud Credentials**
 
-- Model: `gemini-2.5-flash-preview-tts`
-- Voice: `Leda` (Spanish voice)
-- Output format: WAV (24kHz sample rate)
+1. Download your Google Cloud service account JSON key file
+
+2. Add the path to your `.env` file:
+
+   ```
+   GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/service-account-key.json
+   ```
+
+   Example:
+   ```
+   GOOGLE_APPLICATION_CREDENTIALS=/Users/yourname/projects/spanish/gen-lang-client-XXXXX.json
+   ```
+
+**Complete .env file example:**
+
+```
+GEMINI_API_KEY=your_gemini_api_key_here
+GOOGLE_APPLICATION_CREDENTIALS=/Users/yourname/projects/spanish/gen-lang-client-XXXXX.json
+```
+
+**Voice Configuration:**
+
+- **Gemini TTS**:
+  - Voice: `Leda` (Spanish voice)
+  - Output: PCM converted to WAV (24kHz)
+
+- **Google Cloud TTS**:
+  - Spanish: `es-US-Neural2-A` (Neural2) or `es-US-Wavenet-A` (WaveNet)
+  - English: `en-US-Neural2-F` (Neural2) or `en-US-Wavenet-F` (WaveNet)
+  - Output: LINEAR16 WAV (24kHz)
 
 Audio files are cached to avoid redundant API calls.
 
@@ -162,9 +231,11 @@ npm install
 
 Dependencies are managed via `uv` (see `pyproject.toml`):
 
-- pandas
-- requests
-- python-dotenv
+- pandas - CSV processing
+- requests - API calls
+- python-dotenv - Environment variable management
+- tqdm - Progress bars
+- google-cloud-texttospeech - Google Cloud TTS API
 
 Install Python dependencies:
 
