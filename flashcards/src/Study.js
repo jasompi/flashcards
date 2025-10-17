@@ -13,6 +13,7 @@ function Study() {
   const [activeDeck, setActiveDeck] = useState([]); // Indices of cards still in deck
   const [currentDeckIndex, setCurrentDeckIndex] = useState(0);
   const [memorized, setMemorized] = useState(new Set()); // Set of memorized card indices
+  const [history, setHistory] = useState([]); // History of shown cards for undo
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -53,15 +54,44 @@ function Study() {
     }
     setActiveDeck(shuffled);
     setCurrentDeckIndex(0);
+    setHistory([]); // Clear history on shuffle
   };
 
   const resetDeck = () => {
     setMemorized(new Set());
     setActiveDeck(cards.map((_, index) => index));
     setCurrentDeckIndex(0);
+    setHistory([]); // Clear history on reset
+  };
+
+  const handlePrevious = () => {
+    if (history.length === 0) return;
+
+    // Get the previous state from history
+    const previousState = history[history.length - 1];
+
+    // Restore previous state
+    setActiveDeck(previousState.deck);
+    setCurrentDeckIndex(previousState.index);
+    setMemorized(previousState.memorized);
+
+    // Remove from history
+    setHistory(history.slice(0, -1));
+  };
+
+  const saveToHistory = () => {
+    // Save current state to history
+    setHistory([...history, {
+      deck: [...activeDeck],
+      index: currentDeckIndex,
+      memorized: new Set(memorized)
+    }]);
   };
 
   const handleMemorized = () => {
+    // Save state to history before making changes
+    saveToHistory();
+
     const currentCardIndex = activeDeck[currentDeckIndex];
 
     // Mark as memorized
@@ -80,6 +110,9 @@ function Study() {
   };
 
   const handleNotMemorized = () => {
+    // Save state to history before making changes
+    saveToHistory();
+
     // Move to next card and reinsert current card back into deck at random position
     const currentCardIndex = activeDeck[currentDeckIndex];
     const newDeck = [...activeDeck];
@@ -176,6 +209,14 @@ function Study() {
       />
 
       <div className="navigation">
+        <button
+          onClick={handlePrevious}
+          disabled={history.length === 0}
+          className="nav-button previous-button"
+          title="Go back to previous card"
+        >
+          ← Previous
+        </button>
         <button
           onClick={handleNotMemorized}
           className="nav-button x-button"
