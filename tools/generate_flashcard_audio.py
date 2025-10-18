@@ -112,27 +112,41 @@ def trim_audio_beginning(pcm_data, trim_ms, sample_rate, num_channels=1, sample_
     return pcm_data[trim_bytes:]
 
 
-def generate_audio_pcm(text, retries=5, backoff_factor=1):
+def generate_audio_pcm(text, language='es-US', retries=5, backoff_factor=1, verbose=False):
     """
     Generates audio PCM data from text using the Gemini TTS API.
 
     Args:
         text (str): The text to be converted to speech.
+        language (str): Language code (e.g., 'es-US' for Spanish, 'en-US' for English).
+                       Used to generate appropriate language prompt for Gemini TTS.
         retries (int): The number of times to retry the API call on failure.
         backoff_factor (int): The backoff factor for exponential retry delay.
+        verbose (bool): If True, print detailed error messages.
 
     Returns:
         tuple: (pcm_data, sample_rate) if successful, (None, None) otherwise.
     """
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key={API_KEY}"
 
+    # Generate language-specific prompt
+    if language.startswith('en'):
+        prompt = f'Say this in US English: "{text}"'
+    elif language.startswith('es'):
+        prompt = f'Say this in US Spanish: "{text}"'
+    else:
+        # Default to just the text without language instruction
+        prompt = text
+
     payload = {
-        "contents": [{"parts": [{"text": text}]}],
+        "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
             "responseModalities": ["AUDIO"],
             "speechConfig": {
                 "voiceConfig": {
-                    "prebuiltVoiceConfig": {"voiceName": "Leda"}
+                    "prebuiltVoiceConfig": {
+                        "voiceName": "Leda"
+                    }
                 }
             }
         },
@@ -174,10 +188,33 @@ def generate_audio_pcm(text, retries=5, backoff_factor=1):
                 return pcm_data, sample_rate
             else:
                 print(f"✗ Error: No audio data found in response for '{text}'.")
+                if verbose:
+                    print(f"   Full response: {json.dumps(result, indent=2)}")
                 return None, None
 
+        except requests.exceptions.HTTPError as e:
+            print(f"✗ Attempt {i + 1}/{retries} failed for '{text}': {e}")
+            if verbose:
+                try:
+                    error_details = response.json()
+                    print(f"   Response status: {response.status_code}")
+                    print(f"   Error details: {json.dumps(error_details, indent=2)}")
+                except:
+                    print(f"   Response text: {response.text}")
+            if i < retries - 1:
+                time.sleep(backoff_factor * (2 ** i))
+            else:
+                print(f"✗ Maximum retries reached for '{text}'. Falling back to Google Cloud TTS...")
+                return None, None
         except requests.exceptions.RequestException as e:
             print(f"✗ Attempt {i + 1}/{retries} failed for '{text}': {e}")
+            if verbose and hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_details = e.response.json()
+                    print(f"   Response status: {e.response.status_code}")
+                    print(f"   Error details: {json.dumps(error_details, indent=2)}")
+                except:
+                    print(f"   Response text: {e.response.text}")
             if i < retries - 1:
                 time.sleep(backoff_factor * (2 ** i))
             else:
@@ -273,7 +310,7 @@ def detect_language_from_header(header):
     return 'es'
 
 
-def generate_and_save_audio(text, output_filename, lang='es', voice_type='neural2', pause_duration_ms=500, retries=5, backoff_factor=1, quiet=False):
+def generate_and_save_audio(text, output_filename, lang='es', voice_type='neural2', pause_duration_ms=500, retries=5, backoff_factor=1, quiet=False, verbose=False):
     """
     Generates audio from text using the Gemini TTS API with Google Cloud TTS as fallback.
     Saves the result as a WAV file. Handles "/" separator by generating audio for each part with pauses in between.
@@ -288,6 +325,7 @@ def generate_and_save_audio(text, output_filename, lang='es', voice_type='neural
         retries (int): The number of times to retry the API call on failure.
         backoff_factor (int): The backoff factor for exponential retry delay.
         quiet (bool): If True, suppress informational messages.
+        verbose (bool): If True, print detailed error messages.
 
     Returns:
         bool: True if successful, False otherwise.
@@ -311,8 +349,11 @@ def generate_and_save_audio(text, output_filename, lang='es', voice_type='neural
         sample_rate = None
 
         for idx, part in enumerate(parts):
+            # Convert language code to full format (es -> es-US, en -> en-US)
+            language_code = f"{lang}-US"
+
             # Try Gemini first
-            pcm_data, rate = generate_audio_pcm(part, retries, backoff_factor)
+            pcm_data, rate = generate_audio_pcm(part, language_code, retries, backoff_factor, verbose)
 
             # If Gemini fails, try Google Cloud TTS
             if pcm_data is None:
@@ -353,8 +394,11 @@ def generate_and_save_audio(text, output_filename, lang='es', voice_type='neural
 
     else:
         # No "/" separator, generate normally
+        # Convert language code to full format (es -> es-US, en -> en-US)
+        language_code = f"{lang}-US"
+
         # Try Gemini first
-        pcm_data, sample_rate = generate_audio_pcm(text, retries, backoff_factor)
+        pcm_data, sample_rate = generate_audio_pcm(text, language_code, retries, backoff_factor, verbose)
 
         # If Gemini fails, try Google Cloud TTS
         if pcm_data is None:
@@ -399,13 +443,14 @@ def sanitize_filename(text):
     return filename
 
 
-def process_csv(csv_path):
+def process_csv(csv_path, verbose=False):
     """
     Process a CSV file and generate audio for all unique words.
     Detects language based on column headers.
 
     Args:
         csv_path (str): Path to the CSV file.
+        verbose (bool): If True, print detailed error messages.
 
     Returns:
         tuple: (success_count, total_count)
@@ -472,7 +517,7 @@ def process_csv(csv_path):
                 # Update progress bar description with current word
                 pbar.set_postfix_str(f"'{word_str}' ({lang.upper()}) -> {filename}", refresh=True)
 
-                if generate_and_save_audio(word_str, str(output_path), lang=lang, quiet=True):
+                if generate_and_save_audio(word_str, str(output_path), lang=lang, quiet=True, verbose=verbose):
                     success_count += 1
 
                 pbar.update(1)
@@ -528,7 +573,8 @@ def test_tts(text, lang='es', api='auto', voice_type='neural2'):
     # Try based on API mode
     if api in ['gemini', 'auto']:
         print("🔄 Trying Gemini TTS API...")
-        pcm_data, sample_rate = generate_audio_pcm(text)
+        language_code = f"{lang}-US"
+        pcm_data, sample_rate = generate_audio_pcm(text, language_code)
         if pcm_data is not None:
             api_used = 'Gemini'
             print("✓ Gemini TTS succeeded\n")
@@ -624,6 +670,8 @@ Examples:
                        help='API to use in test mode: gemini, cloud, or auto (try gemini then cloud) (default: auto)')
     parser.add_argument('--voice-type', type=str, default='neural2', choices=['neural2', 'wavenet'],
                        help='Voice type for Google Cloud TTS: neural2 (high-quality) or wavenet (premium) (default: neural2)')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                       help='Show detailed error messages from API failures')
 
     args = parser.parse_args()
 
@@ -636,7 +684,7 @@ Examples:
     if not args.csv_file:
         parser.error('csv_file is required when not using --test')
 
-    success, total = process_csv(args.csv_file)
+    success, total = process_csv(args.csv_file, verbose=args.verbose)
 
     # Exit with appropriate status code
     sys.exit(0 if success == total else 1)
