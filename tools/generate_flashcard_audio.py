@@ -38,6 +38,9 @@ if not API_KEY:
     print("Please create a .env file with GEMINI_API_KEY=your_api_key")
     sys.exit(1)
 
+# Global variable to track rate limit delay
+_rate_limit_delay = 0
+
 
 def pcm_to_wav(pcm_data, sample_rate, num_channels=1, sample_width=2):
     """
@@ -127,6 +130,8 @@ def generate_audio_pcm(text, language='es-US', retries=5, backoff_factor=1, verb
     Returns:
         tuple: (pcm_data, sample_rate) if successful, (None, None) otherwise.
     """
+    global _rate_limit_delay
+
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key={API_KEY}"
 
     # Generate language-specific prompt
@@ -153,6 +158,10 @@ def generate_audio_pcm(text, language='es-US', retries=5, backoff_factor=1, verb
         "model": "gemini-2.5-flash-preview-tts"
     }
 
+    # Apply persistent rate limit delay before making request
+    if _rate_limit_delay > 0:
+        time.sleep(_rate_limit_delay)
+
     for i in range(retries):
         try:
             response = requests.post(url, headers={'Content-Type': 'application/json'}, data=json.dumps(payload))
@@ -162,11 +171,14 @@ def generate_audio_pcm(text, language='es-US', retries=5, backoff_factor=1, verb
                 retry_after = response.headers.get('Retry-After')
                 if retry_after:
                     delay = int(retry_after)
-                    print(f"⚠ Rate limit hit for '{text}'. Waiting {delay}s (from Retry-After header)...")
+                    print(f"⚠ Rate limit hit for '{text}'. Setting persistent delay to {delay}s (from Retry-After header)...")
                 else:
                     # Use exponential backoff with minimum 2 seconds for rate limits
                     delay = max(2, backoff_factor * (2 ** i))
-                    print(f"⚠ Rate limit hit for '{text}'. Waiting {delay}s before retry {i + 1}/{retries}...")
+                    print(f"⚠ Rate limit hit for '{text}'. Setting persistent delay to {delay}s...")
+
+                # Update global rate limit delay to persist across requests
+                _rate_limit_delay = delay
 
                 if i < retries - 1:
                     time.sleep(delay)
