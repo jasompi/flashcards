@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSettings } from './SettingsContext';
 import './FlashCard.css';
 
-function FlashCard({ front, back, col1, col2, showFrontFirst, datasetName, isFlipped, setIsFlipped, isTransitioning, spellMode, textRevealed, setTextRevealed }) {
+function FlashCard({ front, back, col1, col2, showFrontFirst, datasetName, isFlipped, setIsFlipped, isTransitioning, spellMode, textRevealed, setTextRevealed, effect }) {
   const { autoPlay } = useSettings();
   const [audioAvailable, setAudioAvailable] = useState({ front: false, back: false });
   const [audio, setAudio] = useState(null);
@@ -147,7 +147,7 @@ function FlashCard({ front, back, col1, col2, showFrontFirst, datasetName, isFli
 
   return (
     <div className="flashcard-container" onClick={handleFlip}>
-      <div className={`flashcard ${isFlipped ? 'flipped' : ''}`}>
+      <div className={`flashcard ${isFlipped ? 'flipped' : ''} ${effect ? effect : ''}`}>
         <div className={`flashcard-front ${frontIsCol1 ? 'col1-color' : 'col2-color'}`}>
           <button
             className="audio-button"

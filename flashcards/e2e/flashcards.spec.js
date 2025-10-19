@@ -189,8 +189,8 @@ test.describe('Flashcards App - Study Page', () => {
     // Click Got It button
     await page.locator('.check-button').click();
 
-    // Wait for transition
-    await page.waitForTimeout(400);
+    // Wait for celebration animation and transition (800ms animation + 300ms fade + buffer)
+    await page.waitForTimeout(1200);
 
     // Verify remaining count decreased or shows memorized count
     const newProgress = await page.locator('.progress').textContent();
@@ -216,8 +216,8 @@ test.describe('Flashcards App - Study Page', () => {
     // Click Not Yet button
     await page.locator('.x-button').click();
 
-    // Wait for transition
-    await page.waitForTimeout(400);
+    // Wait for sad animation and transition (800ms animation + 300ms fade + buffer)
+    await page.waitForTimeout(1200);
 
     // Verify card count stayed the same (card was reinserted)
     const newProgress = await page.locator('.progress').textContent();
@@ -563,3 +563,179 @@ test.describe('Flashcards App - Spell Mode', () => {
   });
 });
 
+test.describe('Flashcards App - Completion and Test Screens', () => {
+  test('should complete all cards and show congratulations', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate through category to study page
+    await page.waitForSelector('.category-button');
+    await page.locator('.category-button').first().click();
+    await page.waitForSelector('.deck-button');
+    await page.locator('.deck-button').first().click();
+
+    // Wait for check button
+    await page.waitForSelector('.check-button');
+
+    // Mark all cards as memorized (loop with max iterations to avoid infinite loop)
+    let maxIterations = 50;
+    while (maxIterations-- > 0) {
+      // Break if we see completion message
+      if (await page.locator('.completion-message').isVisible().catch(() => false)) {
+        break;
+      }
+
+      // Check if check button still exists
+      if (await page.locator('.check-button').isVisible().catch(() => false)) {
+        await page.locator('.check-button').click();
+        await page.waitForTimeout(1200); // Wait for animation and transition
+      } else {
+        break;
+      }
+    }
+
+    // Verify completion message appears
+    await expect(page.locator('.completion-message')).toBeVisible();
+    await expect(page.locator('.completion-message')).toContainText('Congratulations');
+
+    // Verify buttons are present
+    await expect(page.locator('.completion-message').getByText('Start Over')).toBeVisible();
+    await expect(page.locator('.completion-message').getByText('← Home')).toBeVisible();
+  });
+
+  test('should navigate home from congratulations screen', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate through category to study page
+    await page.waitForSelector('.category-button');
+    await page.locator('.category-button').first().click();
+    await page.waitForSelector('.deck-button');
+    await page.locator('.deck-button').first().click();
+
+    // Mark all cards as memorized
+    await page.waitForSelector('.check-button');
+    let maxIterations = 50;
+    while (maxIterations-- > 0) {
+      if (await page.locator('.completion-message').isVisible().catch(() => false)) {
+        break;
+      }
+      if (await page.locator('.check-button').isVisible().catch(() => false)) {
+        await page.locator('.check-button').click();
+        await page.waitForTimeout(1200);
+      } else {
+        break;
+      }
+    }
+
+    // Wait for completion screen to be fully rendered
+    await page.waitForTimeout(500);
+
+    // Click Home button
+    await page.locator('.completion-message').getByText('← Home').click();
+
+    // Verify we're back on home page
+    await expect(page).toHaveURL('/');
+    await expect(page.locator('h1')).toContainText('Flashcards');
+  });
+
+  test('should complete test and show test results', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate through category to study page
+    await page.waitForSelector('.category-button');
+    await page.locator('.category-button').first().click();
+    await page.waitForSelector('.deck-button');
+    await page.locator('.deck-button').first().click();
+
+    // Start test mode
+    await page.waitForSelector('.test-button');
+    await page.locator('.test-button').click();
+    await page.waitForTimeout(400);
+
+    // Complete test by marking all cards
+    let maxIterations = 50;
+    while (maxIterations-- > 0) {
+      const completionVisible = await page.locator('.completion-message').isVisible().catch(() => false);
+      if (completionVisible) {
+        break;
+      }
+
+      // Try to click Got It button
+      const checkButton = page.locator('.check-button');
+      if (await checkButton.isVisible().catch(() => false)) {
+        await checkButton.click();
+        await page.waitForTimeout(1200);
+      } else {
+        break;
+      }
+    }
+
+    // Verify test completion message
+    await expect(page.locator('.completion-message')).toBeVisible();
+    const completionText = await page.locator('.completion-message').textContent();
+    expect(completionText).toMatch(/Test Complete!|Perfect Score!/);
+
+    // Verify Home button is present
+    await expect(page.locator('.test-controls').getByText('← Home')).toBeVisible();
+  });
+
+  test('should navigate home from test complete screen', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate through category to study page
+    await page.waitForSelector('.category-button');
+    await page.locator('.category-button').first().click();
+    await page.waitForSelector('.deck-button');
+    await page.locator('.deck-button').first().click();
+
+    // Start and complete test
+    await page.waitForSelector('.test-button');
+    await page.locator('.test-button').click();
+    await page.waitForTimeout(400);
+
+    // Mark all cards
+    let maxIterations = 50;
+    while (maxIterations-- > 0) {
+      if (await page.locator('.completion-message').isVisible().catch(() => false)) {
+        break;
+      }
+      const checkButton = page.locator('.check-button');
+      if (await checkButton.isVisible().catch(() => false)) {
+        await checkButton.click();
+        await page.waitForTimeout(1200);
+      } else {
+        break;
+      }
+    }
+
+    // Wait for completion screen to be fully stable
+    await page.waitForTimeout(500);
+
+    // Click Home button from test controls with force to avoid animation issues
+    await page.locator('.test-controls').getByText('← Home').click({ force: true });
+
+    // Verify we're back on home page
+    await expect(page).toHaveURL('/');
+    await expect(page.locator('h1')).toContainText('Flashcards');
+  });
+
+  test('should hide settings panel during test mode', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate through category to study page
+    await page.waitForSelector('.category-button');
+    await page.locator('.category-button').first().click();
+    await page.waitForSelector('.deck-button');
+    await page.locator('.deck-button').first().click();
+
+    // Verify settings panel is visible initially
+    await expect(page.locator('.settings-panel')).toBeVisible();
+
+    // Start test mode
+    await page.waitForSelector('.test-button');
+    await page.locator('.test-button').click();
+    await page.waitForTimeout(400);
+
+    // Verify settings panel is now hidden
+    await expect(page.locator('.settings-panel')).not.toBeVisible();
+  });
+});

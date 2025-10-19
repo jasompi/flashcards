@@ -430,21 +430,41 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
   - Smooth fade transitions when switching Front/Back in Spell Mode
   - Perfect for practicing spelling and pronunciation without visual cues
 
+**Visual Feedback Animations:**
+- **"Got It" Button**: Card nods forward 3 times (acknowledgment animation) when marking cards as memorized
+- **"Not Yet" Button**: Card shakes horizontally (disagreement animation) when marking cards as not memorized
+- Animations provide immediate tactile feedback for user actions
+- 800ms duration matching the timing of card transitions
+
 **UI Improvements:**
 - **Settings Panel Enhancement**: Settings panel now scrolls with page content (changed from fixed to absolute positioning)
+- **Test Mode Privacy**: Settings panel hidden during test mode to prevent mid-test configuration changes
+- **Completion Screen Styling**:
+  - Warmer color palette for completion cards (cream/peach tones instead of blue-gray)
+  - Consistent button styling across all completion screens
+  - Proper button sizing and alignment on mobile devices
+  - Improved readability with better contrast
+- **Navigation Improvements**:
+  - Back buttons on study pages show category name (e.g., "← Spanish")
+  - "Home" buttons on completion screens properly navigate to home page
+  - Test completion and congratulations screens have separate navigation flows
 - **Mobile Optimization**: Improved mobile layout with proper alignment and spacing
   - Settings panel properly aligned with back button
   - Content positioned to avoid overlap with settings
   - Reduced spacing between button groups for better use of screen space
+  - Completion cards fit within screen width with responsive text sizing
+  - "Congratulations!" heading scales down on mobile (2.5rem → 1.8rem)
 - **Consistent Card Colors**: Card background colors always match data columns (Column 1 = purple gradient, Column 2 = pink gradient) regardless of Front/Back toggle setting
   - Eliminates confusion when switching between Front and Back views
   - Visual consistency helps reinforce which side of the card is showing
 
 **Testing:**
 - Added comprehensive e2e tests for Spell Mode (6 new test cases)
+- Added e2e tests for completion screens and test mode (5 new test cases)
+- Updated timing in tests to account for new animation durations (800ms + transitions)
 - Fixed test reliability issues with toggle switch interactions
 - Improved test assertions to handle floating-point precision
-- All tests passing with `--workers=1` configuration
+- All tests passing with proper animation wait times
 
 **Bug Fixes:**
 - Fixed audio NotAllowedError handling for browser security
@@ -452,10 +472,11 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 - Fixed Front/Back switch transitions to prevent text flashing
 - Fixed settings panel mobile positioning issues
 - Fixed "Reset" button test with proper transition timing
+- Fixed completion screen button text inconsistencies
 
 **Documentation:**
 - Updated README with Spell Mode features
-- Added comprehensive feature documentation
+- Added comprehensive feature documentation for animations
 - Documented test running commands
 - Added project structure overview
 

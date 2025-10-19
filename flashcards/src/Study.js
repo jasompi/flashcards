@@ -23,6 +23,7 @@ function Study() {
   const [testCompleted, setTestCompleted] = useState(false); // Track if test is completed
   const [textRevealed, setTextRevealed] = useState(false); // Track if text is revealed in spell mode
   const [displayFrontFirst, setDisplayFrontFirst] = useState(showFrontFirst); // Local state for delayed display update
+  const [effect, setEffect] = useState(null); // Track current animation effect ('celebrate' or 'sad')
 
   useEffect(() => {
     const loadCSV = async () => {
@@ -247,23 +248,31 @@ function Study() {
   };
 
   const handleMemorized = () => {
-    // Fade out content
-    setIsTransitioning(true);
-    setTextRevealed(false); // Reset text reveal immediately
+    // Trigger celebration effect
+    setEffect('celebrate');
 
-    // If card is flipped, flip to front first
-    if (isFlipped) {
-      setIsFlipped(false);
-    }
-
-    // Wait 300ms (fade out + half flip) before updating card
+    // Wait for celebration animation to play (800ms to match sad animation)
     setTimeout(() => {
-      updateMemorized();
-      // Fade in new content after a brief moment
+      setEffect(null);
+
+      // Fade out content
+      setIsTransitioning(true);
+      setTextRevealed(false); // Reset text reveal immediately
+
+      // If card is flipped, flip to front first
+      if (isFlipped) {
+        setIsFlipped(false);
+      }
+
+      // Wait 300ms (fade out + half flip) before updating card
       setTimeout(() => {
-        setIsTransitioning(false);
-      }, 50);
-    }, 300);
+        updateMemorized();
+        // Fade in new content after a brief moment
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 50);
+      }, 300);
+    }, 800);
   };
 
   const updateMemorized = () => {
@@ -303,23 +312,31 @@ function Study() {
   };
 
   const handleNotMemorized = () => {
-    // Fade out content
-    setIsTransitioning(true);
-    setTextRevealed(false); // Reset text reveal immediately
+    // Trigger sad effect
+    setEffect('sad');
 
-    // If card is flipped, flip to front first
-    if (isFlipped) {
-      setIsFlipped(false);
-    }
-
-    // Wait 300ms (fade out + half flip) before updating card
+    // Wait for sad animation to play (800ms for slower animation)
     setTimeout(() => {
-      updateNotMemorized();
-      // Fade in new content after a brief moment
+      setEffect(null);
+
+      // Fade out content
+      setIsTransitioning(true);
+      setTextRevealed(false); // Reset text reveal immediately
+
+      // If card is flipped, flip to front first
+      if (isFlipped) {
+        setIsFlipped(false);
+      }
+
+      // Wait 300ms (fade out + half flip) before updating card
       setTimeout(() => {
-        setIsTransitioning(false);
-      }, 50);
-    }, 300);
+        updateNotMemorized();
+        // Fade in new content after a brief moment
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 50);
+      }, 300);
+    }, 800);
   };
 
   const updateNotMemorized = () => {
@@ -409,6 +426,10 @@ function Study() {
     navigate(`/category/${categoryId}`);
   };
 
+  const handleHome = () => {
+    navigate('/');
+  };
+
   if (loading) {
     return <div className="study">Loading...</div>;
   }
@@ -431,6 +452,10 @@ function Study() {
     );
   }
 
+  // Extract and format category name for back button (used in multiple places)
+  const categoryId = filename.split('_')[0].toLowerCase();
+  const categoryName = categoryId.charAt(0).toUpperCase() + categoryId.slice(1);
+
   // Check if test is completed
   if (testCompleted) {
     const totalCards = cards.length;
@@ -441,9 +466,9 @@ function Study() {
 
     return (
       <div className="study">
-        <SettingsPanel />
+        {!isTestMode && <SettingsPanel />}
         <button className="back-button" onClick={handleBack}>
-          ← Home
+          ← {categoryName}
         </button>
         <div className={`completion-message ${isPerfectScore ? 'perfect-score' : ''}`}>
           {isPerfectScore ? (
@@ -467,7 +492,7 @@ function Study() {
             <button className="nav-button retake-button" onClick={handleStartTest}>
               📝 Retake Test
             </button>
-            <button className="nav-button" onClick={handleBack}>
+            <button className="nav-button" onClick={handleHome}>
               ← Home
             </button>
           </div>
@@ -480,17 +505,17 @@ function Study() {
   if (activeDeck.length === 0) {
     return (
       <div className="study">
-        <SettingsPanel />
+        {!isTestMode && <SettingsPanel />}
         <button className="back-button" onClick={handleBack}>
-          ← Home
+          ← {categoryName}
         </button>
         <div className="completion-message">
           <h2>🎉 Congratulations!</h2>
           <p>You've memorized all {cards.length} cards!</p>
-          <button className="reset-button" onClick={resetDeck}>
+          <button className="nav-button" onClick={resetDeck}>
             Start Over
           </button>
-          <button className="nav-button" onClick={handleBack}>
+          <button className="nav-button" onClick={handleHome}>
             ← Home
           </button>
         </div>
@@ -501,13 +526,9 @@ function Study() {
   const currentCardIndex = activeDeck[currentDeckIndex];
   const currentCard = cards[currentCardIndex];
 
-  // Extract and format category name for back button
-  const categoryId = filename.split('_')[0].toLowerCase();
-  const categoryName = categoryId.charAt(0).toUpperCase() + categoryId.slice(1);
-
   return (
     <div className="study">
-      <SettingsPanel />
+      {!isTestMode && <SettingsPanel />}
       <button className="back-button" onClick={handleBack}>
         ← {categoryName}
       </button>
@@ -530,6 +551,7 @@ function Study() {
         spellMode={spellMode}
         textRevealed={textRevealed}
         setTextRevealed={setTextRevealed}
+        effect={effect}
       />
 
       <div className="navigation">

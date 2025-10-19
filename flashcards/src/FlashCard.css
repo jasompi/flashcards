@@ -17,6 +17,55 @@
   transform: rotateY(180deg);
 }
 
+/* Celebration animation - nod/ack */
+.flashcard.celebrate {
+  animation: nod 0.8s ease-in-out;
+}
+
+@keyframes nod {
+  0% {
+    transform: rotateX(0deg);
+  }
+  12.5% {
+    transform: rotateX(-15deg);
+  }
+  25% {
+    transform: rotateX(0deg);
+  }
+  37.5% {
+    transform: rotateX(-15deg);
+  }
+  50% {
+    transform: rotateX(0deg);
+  }
+  62.5% {
+    transform: rotateX(-15deg);
+  }
+  75% {
+    transform: rotateX(0deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+/* Sad animation - slower shake */
+.flashcard.sad {
+  animation: sadShake 0.8s ease-out;
+}
+
+@keyframes sadShake {
+  0%, 100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  12.5%, 37.5%, 62.5%, 87.5% {
+    transform: translateX(-10px) rotate(-2deg);
+  }
+  25%, 50%, 75% {
+    transform: translateX(10px) rotate(2deg);
+  }
+}
+
 .flashcard-front,
 .flashcard-back {
   position: absolute;
