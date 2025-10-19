@@ -2,10 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useSettings } from './SettingsContext';
 import './FlashCard.css';
 
-function FlashCard({ front, back, datasetName, isFlipped, setIsFlipped, isTransitioning }) {
+function FlashCard({ front, back, col1, col2, showFrontFirst, datasetName, isFlipped, setIsFlipped, isTransitioning, spellMode, textRevealed, setTextRevealed }) {
   const { autoPlay } = useSettings();
   const [audioAvailable, setAudioAvailable] = useState({ front: false, back: false });
   const [audio, setAudio] = useState(null);
+
+  // In spell mode, auto-play is always enabled
+  const effectiveAutoPlay = spellMode || autoPlay;
+
+  // Determine which side is showing col1 data (for consistent colors)
+  const frontIsCol1 = showFrontFirst;
+  const backIsCol1 = !showFrontFirst;
 
   // Sanitize filename to match Python's sanitize_filename function
   // Python's isalnum() includes Unicode letters (á, ñ, etc.)
@@ -57,11 +64,14 @@ function FlashCard({ front, back, datasetName, isFlipped, setIsFlipped, isTransi
       setAudioAvailable({ front: frontExists, back: backExists });
 
       // Auto-play front audio if enabled and available
-      if (autoPlay && frontExists) {
+      if (effectiveAutoPlay && frontExists) {
         const newAudio = new Audio(frontPath);
         setAudio(newAudio);
         newAudio.play().catch(err => {
-          console.error('Error auto-playing audio:', err);
+          // Suppress NotAllowedError - this is expected before user interaction
+          if (err.name !== 'NotAllowedError') {
+            console.error('Error auto-playing audio:', err);
+          }
         });
       }
     };
@@ -69,9 +79,21 @@ function FlashCard({ front, back, datasetName, isFlipped, setIsFlipped, isTransi
     if (datasetName) {
       checkAudio();
     }
-  }, [front, back, datasetName, autoPlay]);
+  }, [front, back, datasetName, effectiveAutoPlay]);
 
   const handleFlip = () => {
+    // In spell mode, if text not revealed yet, reveal it instead of flipping
+    // This should work even during transitions
+    if (spellMode && !textRevealed) {
+      setTextRevealed(true);
+      return;
+    }
+
+    // Don't flip if transitioning (only applies to normal flipping)
+    if (isTransitioning) {
+      return;
+    }
+
     // Stop current audio immediately when flipping
     if (audio) {
       audio.pause();
@@ -81,7 +103,7 @@ function FlashCard({ front, back, datasetName, isFlipped, setIsFlipped, isTransi
     setIsFlipped(!isFlipped);
 
     // Auto-play audio for the new side when flipping if auto-play is enabled
-    if (autoPlay) {
+    if (effectiveAutoPlay) {
       const targetText = !isFlipped ? back : front;
       const targetAvailable = !isFlipped ? audioAvailable.back : audioAvailable.front;
 
@@ -93,7 +115,10 @@ function FlashCard({ front, back, datasetName, isFlipped, setIsFlipped, isTransi
         const newAudio = new Audio(audioPath);
         setAudio(newAudio);
         newAudio.play().catch(err => {
-          console.error('Error auto-playing audio:', err);
+          // Suppress NotAllowedError - this is expected before user interaction
+          if (err.name !== 'NotAllowedError') {
+            console.error('Error auto-playing audio:', err);
+          }
         });
       }
     }
@@ -123,7 +148,7 @@ function FlashCard({ front, back, datasetName, isFlipped, setIsFlipped, isTransi
   return (
     <div className="flashcard-container" onClick={handleFlip}>
       <div className={`flashcard ${isFlipped ? 'flipped' : ''}`}>
-        <div className="flashcard-front">
+        <div className={`flashcard-front ${frontIsCol1 ? 'col1-color' : 'col2-color'}`}>
           <button
             className="audio-button"
             onClick={handlePlayAudio}
@@ -132,11 +157,11 @@ function FlashCard({ front, back, datasetName, isFlipped, setIsFlipped, isTransi
           >
             🔊
           </button>
-          <div className={`card-content ${isTransitioning ? 'transitioning' : ''}`}>
+          <div className={`card-content ${isTransitioning ? 'transitioning' : ''} ${spellMode && !textRevealed ? 'hidden' : ''}`}>
             {front}
           </div>
         </div>
-        <div className="flashcard-back">
+        <div className={`flashcard-back ${backIsCol1 ? 'col1-color' : 'col2-color'}`}>
           <button
             className="audio-button"
             onClick={handlePlayAudio}
@@ -145,7 +170,7 @@ function FlashCard({ front, back, datasetName, isFlipped, setIsFlipped, isTransi
           >
             🔊
           </button>
-          <div className={`card-content ${isTransitioning ? 'transitioning' : ''}`}>
+          <div className={`card-content ${isTransitioning ? 'transitioning' : ''} ${spellMode && !textRevealed ? 'hidden' : ''}`}>
             {back}
           </div>
         </div>

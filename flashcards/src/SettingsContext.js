@@ -13,6 +13,11 @@ export function SettingsProvider({ children }) {
     return saved ? JSON.parse(saved) : true;
   });
 
+  const [spellMode, setSpellMode] = useState(() => {
+    const saved = localStorage.getItem('spellMode');
+    return saved ? JSON.parse(saved) : false;
+  });
+
   useEffect(() => {
     localStorage.setItem('autoPlay', JSON.stringify(autoPlay));
   }, [autoPlay]);
@@ -21,6 +26,10 @@ export function SettingsProvider({ children }) {
     localStorage.setItem('showFrontFirst', JSON.stringify(showFrontFirst));
   }, [showFrontFirst]);
 
+  useEffect(() => {
+    localStorage.setItem('spellMode', JSON.stringify(spellMode));
+  }, [spellMode]);
+
   return (
     <SettingsContext.Provider
       value={{
@@ -28,6 +37,8 @@ export function SettingsProvider({ children }) {
         setAutoPlay,
         showFrontFirst,
         setShowFrontFirst,
+        spellMode,
+        setSpellMode,
       }}
     >
       {children}

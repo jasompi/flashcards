@@ -417,6 +417,48 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ## Changelog
 
+### Version 1.1 (October 2025)
+
+#### Spell Mode & Enhanced Study Features
+
+**New Study Mode:**
+- **Spell Mode**: Audio-first learning feature for spelling practice
+  - Text hidden by default when showing cards
+  - Click card to reveal text and verify spelling
+  - Auto-play audio automatically enabled in Spell Mode
+  - Text automatically hides when navigating to new cards
+  - Smooth fade transitions when switching Front/Back in Spell Mode
+  - Perfect for practicing spelling and pronunciation without visual cues
+
+**UI Improvements:**
+- **Settings Panel Enhancement**: Settings panel now scrolls with page content (changed from fixed to absolute positioning)
+- **Mobile Optimization**: Improved mobile layout with proper alignment and spacing
+  - Settings panel properly aligned with back button
+  - Content positioned to avoid overlap with settings
+  - Reduced spacing between button groups for better use of screen space
+- **Consistent Card Colors**: Card background colors always match data columns (Column 1 = purple gradient, Column 2 = pink gradient) regardless of Front/Back toggle setting
+  - Eliminates confusion when switching between Front and Back views
+  - Visual consistency helps reinforce which side of the card is showing
+
+**Testing:**
+- Added comprehensive e2e tests for Spell Mode (6 new test cases)
+- Fixed test reliability issues with toggle switch interactions
+- Improved test assertions to handle floating-point precision
+- All tests passing with `--workers=1` configuration
+
+**Bug Fixes:**
+- Fixed audio NotAllowedError handling for browser security
+- Fixed text reveal state management in Spell Mode
+- Fixed Front/Back switch transitions to prevent text flashing
+- Fixed settings panel mobile positioning issues
+- Fixed "Reset" button test with proper transition timing
+
+**Documentation:**
+- Updated README with Spell Mode features
+- Added comprehensive feature documentation
+- Documented test running commands
+- Added project structure overview
+
 ### Version 1.0 (October 2025)
 
 #### Multi-Language Support & Hierarchical Navigation

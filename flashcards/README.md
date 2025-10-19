@@ -1,70 +1,146 @@
-# Getting Started with Create React App
+# Multi-Language Flashcards App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React-based flashcard application for language learning with audio pronunciation support and multiple study modes.
+
+## Features
+
+### Core Functionality
+- **Multi-language Support**: Study flashcards for Spanish, Chinese, French, and more
+- **Hierarchical Navigation**: Browse categories and decks organized by topic
+- **Audio Pronunciation**: Play native speaker audio for vocabulary words (powered by Google Gemini TTS)
+- **Dynamic Loading**: CSV-based flashcard data loaded from manifest
+
+### Study Modes
+- **Standard Study Mode**: Flip cards, mark as memorized, and track progress
+- **Test Mode**: Randomized quiz with scoring and failed card review
+- **Spell Mode**: Audio-first learning where text is hidden until revealed
+  - Text hidden by default when navigating to cards
+  - Click card to reveal text and check your spelling
+  - Auto-play audio automatically enabled
+  - Perfect for practicing spelling and pronunciation
+
+### Study Controls
+- **Front/Back Toggle**: Switch which side of the card shows first
+- **Auto-play Audio**: Automatically play audio when cards appear
+- **Navigation**: Previous/Next buttons to move through cards
+- **Memorization Tracking**:
+  - "Got It" - Remove card from active deck
+  - "Not Yet" - Reinsert card for later review
+- **Deck Management**:
+  - Shuffle - Randomize card order
+  - Reset - Start over with all cards
+  - Test - Enter test mode
+
+### Smart Features
+- **Consistent Colors**: Card colors always match data columns (purple/pink) regardless of Front/Back setting
+- **Smooth Transitions**: Fade effects when navigating between cards
+- **Mobile Responsive**: Optimized layout for mobile devices
+- **Settings Persistence**: Study preferences saved to localStorage
+
+## Getting Started
+
+### Prerequisites
+- Node.js and npm installed
+- Audio files generated using the TTS tools (see parent directory)
+
+### Installation
+
+```bash
+npm install
+```
+
+### Running the App
+
+```bash
+npm start
+# or use the convenience script
+../start.sh
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+
+### Running Tests
+
+```bash
+# Run all e2e tests
+npm run test:e2e
+
+# Run tests in UI mode
+npm run test:e2e:ui
+
+# Run tests in headed mode with single worker
+npx playwright test --headed --workers=1
+
+# Run specific test suite
+npx playwright test --grep "Spell Mode"
+```
+
+## Project Structure
+
+```
+flashcards/
+├── public/
+│   └── data/              # CSV flashcard files and audio
+│       ├── manifest.json  # Auto-generated list of available decks
+│       ├── *.csv         # Flashcard data files
+│       └── */            # Audio folders (one per CSV file)
+├── src/
+│   ├── App.js            # Main app with routing
+│   ├── Home.js           # Category selection page
+│   ├── Category.js       # Deck selection page
+│   ├── Study.js          # Flashcard study interface
+│   ├── FlashCard.js      # Individual flashcard component
+│   ├── SettingsContext.js # Global settings state
+│   └── components/
+│       └── SettingsPanel.js # Study mode settings UI
+├── e2e/
+│   └── flashcards.spec.js # Playwright e2e tests
+└── playwright.config.js   # Test configuration
+```
+
+## Adding New Flashcard Decks
+
+1. Add your CSV file to `public/data/` (format: `category_deckname.csv`)
+2. Generate audio using `uv run tools/generate_flashcard_audio.py <csv_file>`
+3. Update manifest: `uv run tools/update_manifest.py`
+4. Reload the app - new deck appears automatically
+
+## CSV Format
+
+```csv
+Column1,Column2
+front text,back text
+word,translation
+```
+
+The app displays Column1 and Column2 with consistent colors (purple for Column1, pink for Column2).
+
+## Technology Stack
+
+- **React** - UI framework
+- **React Router** - Navigation
+- **Playwright** - E2E testing
+- **Google Gemini TTS** - Audio generation (see tools/)
 
 ## Available Scripts
 
-In the project directory, you can run:
-
 ### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Runs the app in development mode at [http://localhost:3000](http://localhost:3000)
 
 ### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Launches the test runner in interactive watch mode
 
 ### `npm run build`
+Builds the app for production to the `build` folder
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### `npm run test:e2e`
+Runs Playwright e2e tests in headless mode
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### `npm run test:e2e:ui`
+Opens Playwright UI for interactive testing
 
 ## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started)
+- [React documentation](https://reactjs.org/)
+- [Playwright documentation](https://playwright.dev/)

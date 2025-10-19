@@ -103,8 +103,8 @@
 .deck-controls {
   display: flex;
   gap: 1rem;
-  margin-top: 3rem;
-  padding-top: 2rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
   border-top: 2px solid #ecf0f1;
 }
 
@@ -202,7 +202,7 @@
 
 .test-controls .nav-button {
   min-width: 250px;
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
   color: white;
 }
 
@@ -251,7 +251,7 @@
 
 @media (max-width: 768px) {
   .study {
-    padding-top: 90px; /* Adjusted for mobile settings panel */
+    padding-top: 160px; /* Increased to accommodate taller settings panel with 3 items */
   }
 
   .navigation {

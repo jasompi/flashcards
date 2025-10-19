@@ -31,6 +31,20 @@
   padding: 20px;
 }
 
+.col1-color {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.col2-color {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+}
+
 .audio-button {
   position: absolute;
   top: 10px;
@@ -63,17 +77,6 @@
   cursor: not-allowed;
 }
 
-.flashcard-front {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.flashcard-back {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-  transform: rotateY(180deg);
-}
-
 .card-content {
   font-size: 2rem;
   text-align: center;
@@ -84,6 +87,10 @@
 }
 
 .card-content.transitioning {
+  opacity: 0;
+}
+
+.card-content.hidden {
   opacity: 0;
 }
 

@@ -1,5 +1,5 @@
 .settings-panel {
-  position: fixed;
+  position: absolute;
   top: 20px;
   right: 20px;
   display: flex;
@@ -125,7 +125,7 @@
 
 @media (max-width: 768px) {
   .settings-panel {
-    top: 10px;
+    top: 20px;
     right: 10px;
     padding: 12px;
     gap: 10px;

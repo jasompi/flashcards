@@ -3,7 +3,7 @@ import { useSettings } from '../SettingsContext';
 import './SettingsPanel.css';
 
 function SettingsPanel() {
-  const { autoPlay, setAutoPlay, showFrontFirst, setShowFrontFirst } = useSettings();
+  const { autoPlay, setAutoPlay, showFrontFirst, setShowFrontFirst, spellMode, setSpellMode } = useSettings();
 
   return (
     <div className="settings-panel">
@@ -30,12 +30,25 @@ function SettingsPanel() {
         <label className="toggle-switch">
           <input
             type="checkbox"
-            checked={autoPlay}
-            onChange={(e) => setAutoPlay(e.target.checked)}
+            checked={spellMode}
+            onChange={(e) => setSpellMode(e.target.checked)}
           />
           <span className="toggle-slider"></span>
         </label>
-        <span className="setting-label">Auto-play audio</span>
+        <span className="setting-label">Spell Mode</span>
+      </div>
+
+      <div className="setting-item">
+        <label className="toggle-switch">
+          <input
+            type="checkbox"
+            checked={spellMode || autoPlay}
+            onChange={(e) => setAutoPlay(e.target.checked)}
+            disabled={spellMode}
+          />
+          <span className="toggle-slider"></span>
+        </label>
+        <span className="setting-label">Auto-Play Audio</span>
       </div>
     </div>
   );

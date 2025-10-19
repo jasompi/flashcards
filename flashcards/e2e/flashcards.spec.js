@@ -267,6 +267,9 @@ test.describe('Flashcards App - Study Page', () => {
     // Click reset button
     await page.locator('.reset-button').click();
 
+    // Wait for reset transition to complete
+    await page.waitForTimeout(400);
+
     // Verify no memorized count in progress
     const progress = await page.locator('.progress').textContent();
     expect(progress.includes('memorized')).toBeFalsy();
@@ -353,3 +356,210 @@ test.describe('Flashcards App - Study Page', () => {
     expect(beforePrevious).not.toBe(afterPrevious);
   });
 });
+
+test.describe('Flashcards App - Spell Mode', () => {
+  test('should toggle Spell Mode on and off', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate through category to study page
+    await page.waitForSelector('.category-button');
+    await page.locator('.category-button').first().click();
+    await page.waitForSelector('.deck-button');
+    await page.locator('.deck-button').first().click();
+
+    // Wait for settings panel to load
+    await page.waitForSelector('.settings-panel', { timeout: 5000 });
+
+    // Wait a bit for React to render
+    await page.waitForTimeout(500);
+
+    // Find Spell Mode toggle switch (not the hidden checkbox, but the visible toggle)
+    const toggleSwitches = page.locator('.settings-panel .toggle-switch');
+    const spellModeToggle = toggleSwitches.nth(0); // First toggle is Spell Mode
+    const spellModeCheckbox = spellModeToggle.locator('input[type="checkbox"]');
+
+    // Verify it's initially unchecked
+    await expect(spellModeCheckbox).not.toBeChecked();
+
+    // Click the visible toggle switch
+    await spellModeToggle.click();
+    await page.waitForTimeout(200);
+
+    // Verify it's now checked
+    await expect(spellModeCheckbox).toBeChecked();
+
+    // Toggle Spell Mode off
+    await spellModeToggle.click();
+    await page.waitForTimeout(200);
+
+    // Verify it's unchecked again
+    await expect(spellModeCheckbox).not.toBeChecked();
+  });
+
+  test('should hide text when Spell Mode is enabled', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate through category to study page
+    await page.waitForSelector('.category-button');
+    await page.locator('.category-button').first().click();
+    await page.waitForSelector('.deck-button');
+    await page.locator('.deck-button').first().click();
+
+    // Wait for flashcard
+    await page.waitForSelector('.flashcard', { timeout: 5000 });
+    await page.waitForTimeout(500);
+
+    // Get initial text visibility (should be visible)
+    const cardContent = page.locator('.card-content').first();
+    await page.waitForSelector('.card-content', { state: 'visible' });
+
+    let opacity = await cardContent.evaluate(el => window.getComputedStyle(el).opacity);
+    expect(parseFloat(opacity)).toBeGreaterThan(0);
+
+    // Enable Spell Mode - click the toggle switch
+    const toggleSwitches = page.locator('.settings-panel .toggle-switch');
+    const spellModeToggle = toggleSwitches.nth(0);
+    await spellModeToggle.click();
+
+    // Wait for state update
+    await page.waitForTimeout(300);
+
+    // Text should now be hidden (opacity near 0)
+    opacity = await cardContent.evaluate(el => window.getComputedStyle(el).opacity);
+    expect(parseFloat(opacity)).toBeLessThan(0.01); // Check it's effectively 0
+  });
+
+  test('should reveal text when clicking card in Spell Mode', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate through category to study page
+    await page.waitForSelector('.category-button');
+    await page.locator('.category-button').first().click();
+    await page.waitForSelector('.deck-button');
+    await page.locator('.deck-button').first().click();
+
+    // Wait for flashcard
+    await page.waitForSelector('.flashcard', { timeout: 5000 });
+    await page.waitForTimeout(500);
+
+    // Enable Spell Mode - click the toggle switch
+    const toggleSwitches = page.locator('.settings-panel .toggle-switch');
+    const spellModeToggle = toggleSwitches.nth(0);
+    await spellModeToggle.click();
+    await page.waitForTimeout(300);
+
+    // Verify text is hidden
+    const cardContent = page.locator('.card-content').first();
+    let opacity = await cardContent.evaluate(el => window.getComputedStyle(el).opacity);
+    expect(parseFloat(opacity)).toBeLessThan(0.01); // Check it's effectively 0
+
+    // Click card to reveal text
+    await page.locator('.flashcard-container').click();
+    await page.waitForTimeout(300);
+
+    // Text should now be visible
+    opacity = await cardContent.evaluate(el => window.getComputedStyle(el).opacity);
+    expect(parseFloat(opacity)).toBeGreaterThan(0);
+  });
+
+  test('should hide text again when navigating to next card in Spell Mode', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate through category to study page
+    await page.waitForSelector('.category-button');
+    await page.locator('.category-button').first().click();
+    await page.waitForSelector('.deck-button');
+    await page.locator('.deck-button').first().click();
+
+    // Wait for flashcard
+    await page.waitForSelector('.flashcard', { timeout: 5000 });
+    await page.waitForTimeout(500);
+
+    // Enable Spell Mode - click the toggle switch
+    const toggleSwitches = page.locator('.settings-panel .toggle-switch');
+    const spellModeToggle = toggleSwitches.nth(0);
+    await spellModeToggle.click();
+    await page.waitForTimeout(300);
+
+    // Reveal text on first card
+    await page.locator('.flashcard-container').click();
+    await page.waitForTimeout(300);
+
+    // Navigate to next card
+    await page.locator('.next-button').click();
+    await page.waitForTimeout(500);
+
+    // Text should be hidden again on new card
+    const cardContent = page.locator('.card-content').first();
+    const opacity = await cardContent.evaluate(el => window.getComputedStyle(el).opacity);
+    expect(parseFloat(opacity)).toBeLessThan(0.01); // Check it's effectively 0
+  });
+
+  test('should automatically enable auto-play when Spell Mode is on', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate through category to study page
+    await page.waitForSelector('.category-button');
+    await page.locator('.category-button').first().click();
+    await page.waitForSelector('.deck-button');
+    await page.locator('.deck-button').first().click();
+
+    // Wait for settings panel
+    await page.waitForSelector('.settings-panel', { timeout: 5000 });
+    await page.waitForTimeout(500);
+
+    // Get toggle switches - spell mode is first, auto-play is second
+    const toggleSwitches = page.locator('.settings-panel .toggle-switch');
+    const spellModeToggle = toggleSwitches.nth(0);
+    const autoPlayToggle = toggleSwitches.nth(1);
+    const autoPlayCheckbox = autoPlayToggle.locator('input[type="checkbox"]');
+
+    // Verify auto-play is initially off
+    await expect(autoPlayCheckbox).not.toBeChecked();
+
+    // Enable Spell Mode
+    await spellModeToggle.click();
+    await page.waitForTimeout(200);
+
+    // Auto-play checkbox should now be disabled (greyed out)
+    await expect(autoPlayCheckbox).toBeDisabled();
+  });
+
+  test('should maintain consistent colors when switching Front/Back', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate through category to study page
+    await page.waitForSelector('.category-button');
+    await page.locator('.category-button').first().click();
+    await page.waitForSelector('.deck-button');
+    await page.locator('.deck-button').first().click();
+
+    // Wait for flashcard
+    await page.waitForSelector('.flashcard-front');
+
+    // Get initial background color
+    const flashcardFront = page.locator('.flashcard-front');
+    const initialBg = await flashcardFront.evaluate(el => window.getComputedStyle(el).background);
+
+    // Switch to Back using segmented control
+    const backButton = page.locator('.segmented-control .segment').nth(1);
+    await backButton.click();
+    await page.waitForTimeout(400);
+
+    // Get new background color
+    const newBg = await flashcardFront.evaluate(el => window.getComputedStyle(el).background);
+
+    // Colors should be different (switched)
+    expect(initialBg).not.toBe(newBg);
+
+    // Switch back to Front
+    const frontButton = page.locator('.segmented-control .segment').nth(0);
+    await frontButton.click();
+    await page.waitForTimeout(400);
+
+    // Should return to original color
+    const finalBg = await flashcardFront.evaluate(el => window.getComputedStyle(el).background);
+    expect(finalBg).toBe(initialBg);
+  });
+});
+

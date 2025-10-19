@@ -8,7 +8,7 @@ import './Study.css';
 function Study() {
   const { filename } = useParams();
   const navigate = useNavigate();
-  const { showFrontFirst } = useSettings();
+  const { showFrontFirst, spellMode } = useSettings();
   const [cards, setCards] = useState([]);
   const [activeDeck, setActiveDeck] = useState([]); // Indices of cards still in deck
   const [currentDeckIndex, setCurrentDeckIndex] = useState(0);
@@ -21,6 +21,8 @@ function Study() {
   const [isTestMode, setIsTestMode] = useState(false); // Track if in test mode
   const [testFailedCards, setTestFailedCards] = useState(new Set()); // Cards marked "Not Yet" in test
   const [testCompleted, setTestCompleted] = useState(false); // Track if test is completed
+  const [textRevealed, setTextRevealed] = useState(false); // Track if text is revealed in spell mode
+  const [displayFrontFirst, setDisplayFrontFirst] = useState(showFrontFirst); // Local state for delayed display update
 
   useEffect(() => {
     const loadCSV = async () => {
@@ -51,51 +53,138 @@ function Study() {
     loadCSV();
   }, [filename]);
 
-  // Reset flip state when card changes
+  // Reset flip state and text reveal when card changes
   useEffect(() => {
     setIsFlipped(false);
-  }, [currentDeckIndex]);
+    setTextRevealed(false);
+  }, [currentDeckIndex, activeDeck]);
+
+  // Reset text reveal when spell mode is toggled
+  useEffect(() => {
+    setTextRevealed(false);
+  }, [spellMode]);
+
+  // Handle Front/Back switch with fade transition in spell mode
+  const prevShowFrontFirstRef = React.useRef(showFrontFirst);
+  useEffect(() => {
+    const showFrontFirstChanged = prevShowFrontFirstRef.current !== showFrontFirst;
+
+    // Only run if showFrontFirst actually changed (not on initial mount or other updates)
+    if (showFrontFirstChanged && spellMode) {
+      // Immediately hide text
+      setTextRevealed(false);
+
+      // Start fade-out transition
+      setIsTransitioning(true);
+
+      // Switch content mid-fade (when opacity is very low)
+      setTimeout(() => {
+        setDisplayFrontFirst(showFrontFirst);
+      }, 150);
+
+      // Complete fade-in
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 300);
+    } else if (showFrontFirstChanged) {
+      // If not in spell mode, switch immediately
+      setDisplayFrontFirst(showFrontFirst);
+    }
+    prevShowFrontFirstRef.current = showFrontFirst;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showFrontFirst]); // Only depend on showFrontFirst, not spellMode or textRevealed
 
   const shuffleDeck = () => {
-    const shuffled = [...activeDeck];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    // Fade out content first
+    setIsTransitioning(true);
+    setTextRevealed(false);
+
+    // If card is flipped, flip to front first
+    if (isFlipped) {
+      setIsFlipped(false);
     }
-    setActiveDeck(shuffled);
-    setCurrentDeckIndex(0);
-    setHistory([]); // Clear history on shuffle
+
+    // Wait for fade out before shuffling
+    setTimeout(() => {
+      const shuffled = [...activeDeck];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      setActiveDeck(shuffled);
+      setCurrentDeckIndex(0);
+      setHistory([]); // Clear history on shuffle
+
+      // Fade in new content after a brief moment
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50);
+    }, 300);
   };
 
   const resetDeck = () => {
-    setMemorized(new Set());
-    setActiveDeck(cards.map((_, index) => index));
-    setCurrentDeckIndex(0);
-    setHistory([]); // Clear history on reset
-    setIsTestMode(false);
-    setTestFailedCards(new Set());
-    setTestCompleted(false);
+    // Fade out content first
+    setIsTransitioning(true);
+    setTextRevealed(false);
+
+    // If card is flipped, flip to front first
+    if (isFlipped) {
+      setIsFlipped(false);
+    }
+
+    // Wait for fade out before resetting
+    setTimeout(() => {
+      setMemorized(new Set());
+      setActiveDeck(cards.map((_, index) => index));
+      setCurrentDeckIndex(0);
+      setHistory([]); // Clear history on reset
+      setIsTestMode(false);
+      setTestFailedCards(new Set());
+      setTestCompleted(false);
+
+      // Fade in new content after a brief moment
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50);
+    }, 300);
   };
 
   const handleStartTest = () => {
-    // Reset memorized state
-    setMemorized(new Set());
-    setTestFailedCards(new Set());
-    setTestCompleted(false);
+    // Fade out content first
+    setIsTransitioning(true);
+    setTextRevealed(false);
 
-    // Shuffle all cards
-    const allCards = cards.map((_, index) => index);
-    const shuffled = [...allCards];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    // If card is flipped, flip to front first
+    if (isFlipped) {
+      setIsFlipped(false);
     }
 
-    // Start test mode
-    setActiveDeck(shuffled);
-    setCurrentDeckIndex(0);
-    setHistory([]);
-    setIsTestMode(true);
+    // Wait for fade out before starting test
+    setTimeout(() => {
+      // Reset memorized state
+      setMemorized(new Set());
+      setTestFailedCards(new Set());
+      setTestCompleted(false);
+
+      // Shuffle all cards
+      const allCards = cards.map((_, index) => index);
+      const shuffled = [...allCards];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+
+      // Start test mode
+      setActiveDeck(shuffled);
+      setCurrentDeckIndex(0);
+      setHistory([]);
+      setIsTestMode(true);
+
+      // Fade in new content after a brief moment
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50);
+    }, 300);
   };
 
   const handleCompleteTest = () => {
@@ -111,6 +200,7 @@ function Study() {
   const handlePrevious = () => {
     // Fade out content
     setIsTransitioning(true);
+    setTextRevealed(false); // Reset text reveal immediately
 
     // If card is flipped, flip to front first
     if (isFlipped) {
@@ -159,6 +249,7 @@ function Study() {
   const handleMemorized = () => {
     // Fade out content
     setIsTransitioning(true);
+    setTextRevealed(false); // Reset text reveal immediately
 
     // If card is flipped, flip to front first
     if (isFlipped) {
@@ -214,6 +305,7 @@ function Study() {
   const handleNotMemorized = () => {
     // Fade out content
     setIsTransitioning(true);
+    setTextRevealed(false); // Reset text reveal immediately
 
     // If card is flipped, flip to front first
     if (isFlipped) {
@@ -285,6 +377,7 @@ function Study() {
   const handleNext = () => {
     // Fade out content
     setIsTransitioning(true);
+    setTextRevealed(false); // Reset text reveal immediately
 
     // If card is flipped, flip to front first
     if (isFlipped) {
@@ -425,12 +518,18 @@ function Study() {
       </div>
 
       <FlashCard
-        front={showFrontFirst ? currentCard.front : currentCard.back}
-        back={showFrontFirst ? currentCard.back : currentCard.front}
+        front={displayFrontFirst ? currentCard.front : currentCard.back}
+        back={displayFrontFirst ? currentCard.back : currentCard.front}
+        col1={currentCard.front}
+        col2={currentCard.back}
+        showFrontFirst={displayFrontFirst}
         datasetName={filename.replace('.csv', '')}
         isFlipped={isFlipped}
         setIsFlipped={setIsFlipped}
         isTransitioning={isTransitioning}
+        spellMode={spellMode}
+        textRevealed={textRevealed}
+        setTextRevealed={setTextRevealed}
       />
 
       <div className="navigation">
