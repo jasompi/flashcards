@@ -4,21 +4,21 @@ import SettingsPanel from './components/SettingsPanel';
 import './Home.css';
 
 function Home() {
-  const [csvFiles, setCsvFiles] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Load CSV files from manifest
+    // Load categories from manifest
     const loadManifest = async () => {
       try {
         const response = await fetch('/data/manifest.json');
         if (!response.ok) {
           throw new Error('Failed to load manifest');
         }
-        const files = await response.json();
-        setCsvFiles(files);
+        const data = await response.json();
+        setCategories(data.categories);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -29,15 +29,15 @@ function Home() {
     loadManifest();
   }, []);
 
-  const handleFileSelect = (file) => {
-    navigate(`/study/${file}`);
+  const handleCategorySelect = (categoryId) => {
+    navigate(`/category/${categoryId}`);
   };
 
   if (loading) {
     return (
       <div className="home">
         <SettingsPanel />
-        <h1>Spanish Flashcards</h1>
+        <h1>Flashcards</h1>
         <p>Loading...</p>
       </div>
     );
@@ -47,7 +47,7 @@ function Home() {
     return (
       <div className="home">
         <SettingsPanel />
-        <h1>Spanish Flashcards</h1>
+        <h1>Flashcards</h1>
         <p className="error">Error: {error}</p>
       </div>
     );
@@ -56,16 +56,20 @@ function Home() {
   return (
     <div className="home">
       <SettingsPanel />
-      <h1>Spanish Flashcards</h1>
-      <p>Select a topic to study:</p>
-      <div className="file-list">
-        {csvFiles.map((item, index) => (
+      <h1>Flashcards</h1>
+      <p>Select a category:</p>
+      <div className="category-list">
+        {categories.map((category, index) => (
           <button
             key={index}
-            className="file-button"
-            onClick={() => handleFileSelect(item.file)}
+            className="category-button"
+            onClick={() => handleCategorySelect(category.id)}
           >
-            {item.name}
+            <div className="category-icon">📚</div>
+            <div className="category-info">
+              <div className="category-name">{category.name}</div>
+              <div className="category-count">{category.decks.length} deck{category.decks.length !== 1 ? 's' : ''}</div>
+            </div>
           </button>
         ))}
       </div>

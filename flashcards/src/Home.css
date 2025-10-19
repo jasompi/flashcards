@@ -19,6 +19,63 @@
   color: #555;
 }
 
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 500px;
+}
+
+.category-button {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  font-size: 1.25rem;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  gap: 1.5rem;
+}
+
+.category-button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.category-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.category-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.category-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.category-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.category-count {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+/* Keep old file-list styles for backwards compatibility if needed */
 .file-list {
   display: flex;
   flex-direction: column;

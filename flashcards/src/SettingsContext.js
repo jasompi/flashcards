@@ -8,8 +8,8 @@ export function SettingsProvider({ children }) {
     return saved ? JSON.parse(saved) : false;
   });
 
-  const [showSpanishFirst, setShowSpanishFirst] = useState(() => {
-    const saved = localStorage.getItem('showSpanishFirst');
+  const [showFrontFirst, setShowFrontFirst] = useState(() => {
+    const saved = localStorage.getItem('showFrontFirst');
     return saved ? JSON.parse(saved) : true;
   });
 
@@ -18,16 +18,16 @@ export function SettingsProvider({ children }) {
   }, [autoPlay]);
 
   useEffect(() => {
-    localStorage.setItem('showSpanishFirst', JSON.stringify(showSpanishFirst));
-  }, [showSpanishFirst]);
+    localStorage.setItem('showFrontFirst', JSON.stringify(showFrontFirst));
+  }, [showFrontFirst]);
 
   return (
     <SettingsContext.Provider
       value={{
         autoPlay,
         setAutoPlay,
-        showSpanishFirst,
-        setShowSpanishFirst,
+        showFrontFirst,
+        setShowFrontFirst,
       }}
     >
       {children}

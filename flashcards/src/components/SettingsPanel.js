@@ -3,10 +3,29 @@ import { useSettings } from '../SettingsContext';
 import './SettingsPanel.css';
 
 function SettingsPanel() {
-  const { autoPlay, setAutoPlay, showSpanishFirst, setShowSpanishFirst } = useSettings();
+  const { autoPlay, setAutoPlay, showFrontFirst, setShowFrontFirst } = useSettings();
 
   return (
     <div className="settings-panel">
+      <div className="setting-item">
+        <div className="segmented-control">
+          <button
+            className={`segment ${showFrontFirst ? 'active' : ''}`}
+            onClick={() => setShowFrontFirst(true)}
+            aria-pressed={showFrontFirst}
+          >
+            Front
+          </button>
+          <button
+            className={`segment ${!showFrontFirst ? 'active' : ''}`}
+            onClick={() => setShowFrontFirst(false)}
+            aria-pressed={!showFrontFirst}
+          >
+            Back
+          </button>
+        </div>
+      </div>
+
       <div className="setting-item">
         <label className="toggle-switch">
           <input
@@ -17,18 +36,6 @@ function SettingsPanel() {
           <span className="toggle-slider"></span>
         </label>
         <span className="setting-label">Auto-play audio</span>
-      </div>
-
-      <div className="setting-item">
-        <label className="toggle-switch">
-          <input
-            type="checkbox"
-            checked={showSpanishFirst}
-            onChange={(e) => setShowSpanishFirst(e.target.checked)}
-          />
-          <span className="toggle-slider"></span>
-        </label>
-        <span className="setting-label">Spanish first</span>
       </div>
     </div>
   );

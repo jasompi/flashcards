@@ -1,14 +1,32 @@
-[
-  {
-    "name": "Spanish Questions Words",
-    "file": "spanish_questions_words.csv"
-  },
-  {
-    "name": "Spanish Speaking Countries And Capitals",
-    "file": "spanish_speaking_countries_and_capitals.csv"
-  },
-  {
-    "name": "Vocabulary Level 1",
-    "file": "vocabulary_level_1.csv"
-  }
-]
+{
+  "categories": [
+    {
+      "name": "Chinese",
+      "id": "chinese",
+      "decks": [
+        {
+          "name": "History I Lesson 5",
+          "file": "chinese_history_I_lesson_5.csv"
+        }
+      ]
+    },
+    {
+      "name": "Spanish",
+      "id": "spanish",
+      "decks": [
+        {
+          "name": "Questions Words",
+          "file": "spanish_questions_words.csv"
+        },
+        {
+          "name": "Speaking Countries And Capitals",
+          "file": "spanish_speaking_countries_and_capitals.csv"
+        },
+        {
+          "name": "Vocabulary Level 1",
+          "file": "spanish_vocabulary_level_1.csv"
+        }
+      ]
+    }
+  ]
+}

@@ -8,7 +8,7 @@ import './Study.css';
 function Study() {
   const { filename } = useParams();
   const navigate = useNavigate();
-  const { showSpanishFirst } = useSettings();
+  const { showFrontFirst } = useSettings();
   const [cards, setCards] = useState([]);
   const [activeDeck, setActiveDeck] = useState([]); // Indices of cards still in deck
   const [currentDeckIndex, setCurrentDeckIndex] = useState(0);
@@ -311,7 +311,9 @@ function Study() {
   };
 
   const handleBack = () => {
-    navigate('/');
+    // Extract category from filename (e.g., "spanish_vocabulary.csv" -> "spanish")
+    const categoryId = filename.split('_')[0].toLowerCase();
+    navigate(`/category/${categoryId}`);
   };
 
   if (loading) {
@@ -406,11 +408,15 @@ function Study() {
   const currentCardIndex = activeDeck[currentDeckIndex];
   const currentCard = cards[currentCardIndex];
 
+  // Extract and format category name for back button
+  const categoryId = filename.split('_')[0].toLowerCase();
+  const categoryName = categoryId.charAt(0).toUpperCase() + categoryId.slice(1);
+
   return (
     <div className="study">
       <SettingsPanel />
       <button className="back-button" onClick={handleBack}>
-        ← Home
+        ← {categoryName}
       </button>
 
       <div className="progress">
@@ -419,8 +425,8 @@ function Study() {
       </div>
 
       <FlashCard
-        front={showSpanishFirst ? currentCard.front : currentCard.back}
-        back={showSpanishFirst ? currentCard.back : currentCard.front}
+        front={showFrontFirst ? currentCard.front : currentCard.back}
+        back={showFrontFirst ? currentCard.back : currentCard.front}
         datasetName={filename.replace('.csv', '')}
         isFlipped={isFlipped}
         setIsFlipped={setIsFlipped}

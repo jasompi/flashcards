@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Deploy Spanish Flashcards to Raspberry Pi
+# Deploy Flashcards to Raspberry Pi
 # Usage: ./deploy.sh [pi@hostname-or-ip]
 
 # Configuration
 PI_HOST="${1:-pi@rpi5}"
-REMOTE_PATH="/var/www/html/spanish-flashcards/"
+REMOTE_PATH="/var/www/html/flashcards/"
 BUILD_DIR="flashcards/build/"
 
 echo "🔨 Building React app..."
@@ -35,11 +35,11 @@ ssh "$PI_HOST" "sudo chown -R www-data:www-data $REMOTE_PATH && sudo chmod -R 75
 if [ $RSYNC_EXIT -eq 0 ]; then
     echo ""
     echo "✅ Deployment successful!"
-    echo "🌐 Visit: https://spanish-flashcards.jpimobile.com"
+    echo "🌐 Visit: https://flashcards.jpimobile.com"
 elif [ $RSYNC_EXIT -eq 23 ]; then
     echo ""
     echo "⚠️  Deployment completed with warnings (some files may have had permission issues)"
-    echo "🌐 Visit: https://spanish-flashcards.jpimobile.com"
+    echo "🌐 Visit: https://flashcards.jpimobile.com"
 else
     echo ""
     echo "❌ Deployment failed with exit code: $RSYNC_EXIT"

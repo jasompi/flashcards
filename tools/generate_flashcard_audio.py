@@ -121,7 +121,7 @@ def generate_audio_pcm(text, language='es-US', retries=5, backoff_factor=1, verb
 
     Args:
         text (str): The text to be converted to speech.
-        language (str): Language code (e.g., 'es-US' for Spanish, 'en-US' for English).
+        language (str): Language code (e.g., 'es-US' for Spanish, 'en-US' for English, 'zh-CN' for Chinese).
                        Used to generate appropriate language prompt for Gemini TTS.
         retries (int): The number of times to retry the API call on failure.
         backoff_factor (int): The backoff factor for exponential retry delay.
@@ -139,6 +139,8 @@ def generate_audio_pcm(text, language='es-US', retries=5, backoff_factor=1, verb
         prompt = f'Say this in US English: "{text}"'
     elif language.startswith('es'):
         prompt = f'Say this in US Spanish: "{text}"'
+    elif language.startswith('zh'):
+        prompt = f'Say this in Mandarin Chinese: "{text}"'
     else:
         # Default to just the text without language instruction
         prompt = text
@@ -242,7 +244,7 @@ def generate_audio_google_cloud_tts(text, lang='es', voice_type='neural2'):
 
     Args:
         text (str): The text to be converted to speech.
-        lang (str): Language code ('es' for Spanish, 'en' for English).
+        lang (str): Language code ('es' for Spanish, 'en' for English, 'zh' for Chinese).
         voice_type (str): Voice type ('neural2' for Neural2, 'wavenet' for WaveNet).
 
     Returns:
@@ -263,6 +265,12 @@ def generate_audio_google_cloud_tts(text, lang='es', voice_type='neural2'):
             else:  # neural2 (default)
                 voice_name = "en-US-Neural2-F"  # English (US) female Neural2 voice
             language_code = "en-US"
+        elif lang == 'zh':
+            if voice_type == 'wavenet':
+                voice_name = "cmn-CN-Wavenet-A"  # Chinese (Mandarin) female WaveNet voice
+            else:  # neural2 (default)
+                voice_name = "cmn-CN-Standard-A"  # Chinese (Mandarin) female Standard voice (Neural2 not available)
+            language_code = "cmn-CN"
         else:  # Default to Spanish
             if voice_type == 'wavenet':
                 voice_name = "es-US-Wavenet-A"  # Spanish (US) female WaveNet voice
@@ -306,13 +314,17 @@ def detect_language_from_header(header):
         header (str): Column header name.
 
     Returns:
-        str: Language code ('es' for Spanish, 'en' for English).
+        str: Language code ('es' for Spanish, 'en' for English, 'zh' for Chinese).
     """
     header_lower = str(header).lower()
 
     # Check for English indicators
     if any(word in header_lower for word in ['english', 'inglés', 'ingles', 'translation', 'meaning']):
         return 'en'
+
+    # Check for Chinese indicators
+    if any(word in header_lower for word in ['chinese', '中文', 'mandarin', 'zh', '汉语', 'putonghua']):
+        return 'zh'
 
     # Check for Spanish indicators (or default to Spanish)
     if any(word in header_lower for word in ['spanish', 'español', 'espanol', 'palabra', 'word']):
@@ -331,7 +343,7 @@ def generate_and_save_audio(text, output_filename, lang='es', voice_type='neural
     Args:
         text (str): The text to be converted to speech. Can contain "/" to separate multiple phrases.
         output_filename (str): The full path to the output WAV file.
-        lang (str): Language code ('es' for Spanish, 'en' for English).
+        lang (str): Language code ('es' for Spanish, 'en' for English, 'zh' for Chinese).
         voice_type (str): Voice type for Google Cloud TTS ('neural2' or 'wavenet').
         pause_duration_ms (int): Duration of pause between phrases in milliseconds (default 500ms).
         retries (int): The number of times to retry the API call on failure.
@@ -361,8 +373,11 @@ def generate_and_save_audio(text, output_filename, lang='es', voice_type='neural
         sample_rate = None
 
         for idx, part in enumerate(parts):
-            # Convert language code to full format (es -> es-US, en -> en-US)
-            language_code = f"{lang}-US"
+            # Convert language code to full format (es -> es-US, en -> en-US, zh -> zh-CN)
+            if lang == 'zh':
+                language_code = "zh-CN"
+            else:
+                language_code = f"{lang}-US"
 
             # Try Gemini first
             pcm_data, rate = generate_audio_pcm(part, language_code, retries, backoff_factor, verbose)
@@ -406,8 +421,11 @@ def generate_and_save_audio(text, output_filename, lang='es', voice_type='neural
 
     else:
         # No "/" separator, generate normally
-        # Convert language code to full format (es -> es-US, en -> en-US)
-        language_code = f"{lang}-US"
+        # Convert language code to full format (es -> es-US, en -> en-US, zh -> zh-CN)
+        if lang == 'zh':
+            language_code = "zh-CN"
+        else:
+            language_code = f"{lang}-US"
 
         # Try Gemini first
         pcm_data, sample_rate = generate_audio_pcm(text, language_code, retries, backoff_factor, verbose)
@@ -455,7 +473,7 @@ def sanitize_filename(text):
     return filename
 
 
-def process_csv(csv_path, verbose=False):
+def process_csv(csv_path, verbose=False, ignore_columns=None):
     """
     Process a CSV file and generate audio for all unique words.
     Detects language based on column headers.
@@ -463,6 +481,7 @@ def process_csv(csv_path, verbose=False):
     Args:
         csv_path (str): Path to the CSV file.
         verbose (bool): If True, print detailed error messages.
+        ignore_columns (list): List of column numbers (1-based) or column header names to ignore.
 
     Returns:
         tuple: (success_count, total_count)
@@ -489,26 +508,57 @@ def process_csv(csv_path, verbose=False):
             print(f"✗ Error: CSV must have at least 2 columns. Found {df.shape[1]}.")
             return 0, 0
 
-        # Detect language for each column based on header
-        first_col = df.columns[0]
-        second_col = df.columns[1]
-        first_col_lang = detect_language_from_header(first_col)
-        second_col_lang = detect_language_from_header(second_col)
+        # Process ignore_columns to determine which columns to skip
+        columns_to_ignore = set()
+        if ignore_columns:
+            for ignore_spec in ignore_columns:
+                # Check if it's a number (1-based column index)
+                if ignore_spec.isdigit():
+                    col_num = int(ignore_spec)
+                    if 1 <= col_num <= df.shape[1]:
+                        columns_to_ignore.add(df.columns[col_num - 1])
+                    else:
+                        print(f"⚠ Warning: Column number {col_num} is out of range (1-{df.shape[1]}). Ignoring.")
+                else:
+                    # It's a header name - find case-insensitive match
+                    matched = False
+                    for col in df.columns:
+                        if str(col).lower() == ignore_spec.lower():
+                            columns_to_ignore.add(col)
+                            matched = True
+                            break
+                    if not matched:
+                        print(f"⚠ Warning: Column '{ignore_spec}' not found in CSV. Ignoring.")
 
-        print(f"📊 Column languages detected:")
-        print(f"   • {first_col}: {first_col_lang.upper()}")
-        print(f"   • {second_col}: {second_col_lang.upper()}\n")
+        if columns_to_ignore:
+            print(f"🚫 Ignoring columns: {', '.join(str(col) for col in columns_to_ignore)}\n")
 
-        # Build word->language mapping
+        # Detect language for each column based on header (excluding ignored columns)
         word_lang_map = {}
 
-        # Process first column
-        for word in df[first_col].dropna().unique():
-            word_lang_map[str(word).strip()] = first_col_lang
+        for col in df.columns:
+            if col in columns_to_ignore:
+                continue
 
-        # Process second column
-        for word in df[second_col].dropna().unique():
-            word_lang_map[str(word).strip()] = second_col_lang
+            col_lang = detect_language_from_header(col)
+
+            # Process column
+            for word in df[col].dropna().unique():
+                word_lang_map[str(word).strip()] = col_lang
+
+        if not word_lang_map:
+            print(f"✗ Error: No columns to process after applying ignore filters.")
+            return 0, 0
+
+        # Print column language detection info
+        print(f"📊 Column languages detected:")
+        for col in df.columns:
+            if col in columns_to_ignore:
+                print(f"   • {col}: IGNORED")
+            else:
+                col_lang = detect_language_from_header(col)
+                print(f"   • {col}: {col_lang.upper()}")
+        print()
 
         words = sorted(word_lang_map.keys())  # Sort for consistent ordering
         total_count = len(words)
@@ -552,7 +602,7 @@ def test_tts(text, lang='es', api='auto', voice_type='neural2'):
 
     Args:
         text (str): The text to convert to speech.
-        lang (str): Language code ('es' for Spanish, 'en' for English).
+        lang (str): Language code ('es' for Spanish, 'en' for English, 'zh' for Chinese).
         api (str): API to use ('gemini', 'cloud', or 'auto' for fallback).
         voice_type (str): Voice type for Google Cloud TTS ('neural2' or 'wavenet').
 
@@ -585,7 +635,11 @@ def test_tts(text, lang='es', api='auto', voice_type='neural2'):
     # Try based on API mode
     if api in ['gemini', 'auto']:
         print("🔄 Trying Gemini TTS API...")
-        language_code = f"{lang}-US"
+        # Convert language code to full format (es -> es-US, en -> en-US, zh -> zh-CN)
+        if lang == 'zh':
+            language_code = "zh-CN"
+        else:
+            language_code = f"{lang}-US"
         pcm_data, sample_rate = generate_audio_pcm(text, language_code)
         if pcm_data is not None:
             api_used = 'Gemini'
@@ -676,12 +730,14 @@ Examples:
     parser.add_argument('csv_file', nargs='?', help='Path to the CSV file (not used with --test)')
     parser.add_argument('--test', type=str, metavar='TEXT',
                        help='Test mode: generate and play audio for the given text')
-    parser.add_argument('--lang', type=str, default='es', choices=['es', 'en'],
+    parser.add_argument('--lang', type=str, default='es', choices=['es', 'en', 'zh'],
                        help='Language for test mode (default: es)')
     parser.add_argument('--api', type=str, default='auto', choices=['gemini', 'cloud', 'auto'],
                        help='API to use in test mode: gemini, cloud, or auto (try gemini then cloud) (default: auto)')
     parser.add_argument('--voice-type', type=str, default='neural2', choices=['neural2', 'wavenet'],
                        help='Voice type for Google Cloud TTS: neural2 (high-quality) or wavenet (premium) (default: neural2)')
+    parser.add_argument('--ignore', type=str, action='append', metavar='COLUMN',
+                       help='Column to ignore (can be column number starting from 1, or column header name, case-insensitive). Can be specified multiple times.')
     parser.add_argument('-v', '--verbose', action='store_true',
                        help='Show detailed error messages from API failures')
 
@@ -696,7 +752,7 @@ Examples:
     if not args.csv_file:
         parser.error('csv_file is required when not using --test')
 
-    success, total = process_csv(args.csv_file, verbose=args.verbose)
+    success, total = process_csv(args.csv_file, verbose=args.verbose, ignore_columns=args.ignore)
 
     # Exit with appropriate status code
     sys.exit(0 if success == total else 1)
