@@ -739,3 +739,133 @@ test.describe('Flashcards App - Completion and Test Screens', () => {
     await expect(page.locator('.settings-panel')).not.toBeVisible();
   });
 });
+
+test.describe('Flashcards App - Math Formula Rendering', () => {
+  test('should render LaTeX math formulas correctly', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate to Math category
+    await page.waitForSelector('.category-button', { timeout: 5000 });
+
+    // Find and click the Math category (look for "Math" in category name)
+    const categories = page.locator('.category-button');
+    const count = await categories.count();
+
+    let mathCategoryFound = false;
+    for (let i = 0; i < count; i++) {
+      const categoryName = await categories.nth(i).locator('.category-name').textContent();
+      if (categoryName.toLowerCase().includes('math')) {
+        await categories.nth(i).click();
+        mathCategoryFound = true;
+        break;
+      }
+    }
+
+    // Skip test if math category not found
+    if (!mathCategoryFound) {
+      test.skip();
+      return;
+    }
+
+    // Wait for decks and click first math deck
+    await page.waitForSelector('.deck-button', { timeout: 5000 });
+    await page.locator('.deck-button').first().click();
+
+    // Wait for flashcard to load
+    await page.waitForSelector('.flashcard', { timeout: 5000 });
+
+    // Check that KaTeX elements are present (KaTeX renders math into spans)
+    const mathElements = page.locator('.katex');
+    const mathCount = await mathElements.count();
+    expect(mathCount).toBeGreaterThan(0);
+
+    // Verify the math is visible (not just text)
+    const firstMath = mathElements.first();
+    await expect(firstMath).toBeVisible();
+  });
+
+  test('should apply dynamic font sizing for long formulas', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate to Math category
+    await page.waitForSelector('.category-button', { timeout: 5000 });
+
+    const categories = page.locator('.category-button');
+    const count = await categories.count();
+
+    let mathCategoryFound = false;
+    for (let i = 0; i < count; i++) {
+      const categoryName = await categories.nth(i).locator('.category-name').textContent();
+      if (categoryName.toLowerCase().includes('math')) {
+        await categories.nth(i).click();
+        mathCategoryFound = true;
+        break;
+      }
+    }
+
+    if (!mathCategoryFound) {
+      test.skip();
+      return;
+    }
+
+    // Navigate to first math deck
+    await page.waitForSelector('.deck-button', { timeout: 5000 });
+    await page.locator('.deck-button').first().click();
+
+    // Wait for flashcard to load
+    await page.waitForSelector('.flashcard', { timeout: 5000 });
+
+    // Get the card content element
+    const cardContent = page.locator('.card-content').first();
+
+    // Check that dynamic font size is applied (inline style)
+    const fontSize = await cardContent.evaluate(el => el.style.fontSize);
+    expect(fontSize).toBeTruthy();
+    expect(fontSize).toMatch(/\d+(\.\d+)?rem/);
+  });
+
+  test('should flip card and show math formula on back', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate to Math category
+    await page.waitForSelector('.category-button', { timeout: 5000 });
+
+    const categories = page.locator('.category-button');
+    const count = await categories.count();
+
+    let mathCategoryFound = false;
+    for (let i = 0; i < count; i++) {
+      const categoryName = await categories.nth(i).locator('.category-name').textContent();
+      if (categoryName.toLowerCase().includes('math')) {
+        await categories.nth(i).click();
+        mathCategoryFound = true;
+        break;
+      }
+    }
+
+    if (!mathCategoryFound) {
+      test.skip();
+      return;
+    }
+
+    // Navigate to first math deck
+    await page.waitForSelector('.deck-button', { timeout: 5000 });
+    await page.locator('.deck-button').first().click();
+
+    // Wait for flashcard to load
+    await page.waitForSelector('.flashcard', { timeout: 5000 });
+
+    // Click to flip the card
+    await page.locator('.flashcard-container').click();
+    await page.waitForTimeout(600);
+
+    // Verify card is flipped
+    const flashcard = page.locator('.flashcard');
+    await expect(flashcard).toHaveClass(/flipped/);
+
+    // Verify math formulas are still rendered on back
+    const mathElements = page.locator('.katex');
+    const mathCount = await mathElements.count();
+    expect(mathCount).toBeGreaterThan(0);
+  });
+});

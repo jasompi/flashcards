@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSettings } from './SettingsContext';
+import { InlineMath } from 'react-katex';
+import 'katex/dist/katex.min.css';
 import './FlashCard.css';
 
 function FlashCard({ front, back, frontAudioText, backAudioText, frontSecondary, backSecondary, col1, col2, showFrontFirst, datasetName, isFlipped, setIsFlipped, isTransitioning, spellMode, textRevealed, setTextRevealed, effect }) {
@@ -158,6 +160,51 @@ function FlashCard({ front, back, frontAudioText, backAudioText, frontSecondary,
     });
   };
 
+  // Helper function to calculate font size based on text length
+  const getDynamicFontSize = (text) => {
+    if (!text) return '1.5rem';
+
+    const length = text.length;
+    if (length > 100) return '1rem';
+    if (length > 70) return '1.2rem';
+    if (length > 50) return '1.4rem';
+    return '1.5rem';
+  };
+
+  // Helper function to render text that may contain LaTeX formulas
+  const renderTextWithMath = (text) => {
+    if (!text) return null;
+
+    // Check if text contains LaTeX delimiters
+    const mathPattern = /\$([^$]+)\$/g;
+    if (!mathPattern.test(text)) {
+      return text; // No math, return plain text
+    }
+
+    // Split text into parts and render math inline
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+    const regex = /\$([^$]+)\$/g;
+
+    while ((match = regex.exec(text)) !== null) {
+      // Add text before math
+      if (match.index > lastIndex) {
+        parts.push(text.substring(lastIndex, match.index));
+      }
+      // Add math formula
+      parts.push(<InlineMath key={match.index} math={match[1]} />);
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex));
+    }
+
+    return parts;
+  };
+
   return (
     <div className="flashcard-container" onClick={handleFlip}>
       <div className={`flashcard ${isFlipped ? 'flipped' : ''} ${effect ? effect : ''}`}>
@@ -172,10 +219,11 @@ function FlashCard({ front, back, frontAudioText, backAudioText, frontSecondary,
               🔊
             </button>
           )}
-          <div className={`card-content ${isTransitioning ? 'transitioning' : ''} ${spellMode && !textRevealed ? 'hidden' : ''}`}>
-            <div className="card-content-primary">{front}</div>
+          <div className={`card-content ${isTransitioning ? 'transitioning' : ''} ${spellMode && !textRevealed ? 'hidden' : ''}`}
+               style={{ fontSize: getDynamicFontSize(front) }}>
+            <div className="card-content-primary">{renderTextWithMath(front)}</div>
             {frontSecondary && (
-              <div className="card-content-secondary">{frontSecondary}</div>
+              <div className="card-content-secondary">{renderTextWithMath(frontSecondary)}</div>
             )}
           </div>
         </div>
@@ -190,10 +238,11 @@ function FlashCard({ front, back, frontAudioText, backAudioText, frontSecondary,
               🔊
             </button>
           )}
-          <div className={`card-content ${isTransitioning ? 'transitioning' : ''} ${spellMode && !textRevealed ? 'hidden' : ''}`}>
-            <div className="card-content-primary">{back}</div>
+          <div className={`card-content ${isTransitioning ? 'transitioning' : ''} ${spellMode && !textRevealed ? 'hidden' : ''}`}
+               style={{ fontSize: getDynamicFontSize(back) }}>
+            <div className="card-content-primary">{renderTextWithMath(back)}</div>
             {backSecondary && (
-              <div className="card-content-secondary">{backSecondary}</div>
+              <div className="card-content-secondary">{renderTextWithMath(backSecondary)}</div>
             )}
           </div>
         </div>

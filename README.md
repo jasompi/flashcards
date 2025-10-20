@@ -59,6 +59,11 @@ The flashcards app is deployed on a Raspberry Pi server running Apache.
     - Shuffle deck to randomize card order
     - Reset to start over with all cards
     - Test mode to quiz yourself
+  - **Math formula rendering**:
+    - LaTeX math formulas rendered with KaTeX
+    - Support for complex mathematical notation (fractions, exponents, trigonometric functions, etc.)
+    - Dynamic font sizing based on formula length for optimal readability
+    - Works on both front and back of cards
   - **Settings panel** (top-right):
     - Toggle between showing Front or Back first
     - Toggle auto-play audio
@@ -108,7 +113,7 @@ The flashcard app uses CSV files located in `flashcards/public/data/`:
 
 **Math:**
 
-- Various math concept flashcards
+- Various math concept flashcards with LaTeX formulas (e.g., `math_derivative_of_common_functions.csv`)
 
 The app automatically organizes CSV files into categories based on filename prefixes (e.g., `spanish_*.csv` → Spanish category).
 
@@ -135,6 +140,25 @@ hello,hola
 goodbye,adiós
 thank you,gracias
 ```
+
+**Math Formulas:**
+
+For math flashcards, use LaTeX notation wrapped in `$...$` delimiters:
+
+```csv
+Function,Derivative
+$f(x)=x^n$,$f'(x)=nx^{n-1}$
+$f(x)=\sin(x)$,$f'(x)=\cos(x)$
+$f(x)=\ln(x)$,$f'(x)=\frac{1}{x}$
+```
+
+The app will automatically render LaTeX math formulas using KaTeX with support for:
+- Fractions: `\frac{a}{b}`
+- Exponents and subscripts: `x^2`, `a_n`
+- Greek letters: `\alpha`, `\beta`, `\theta`
+- Trigonometric functions: `\sin`, `\cos`, `\tan`
+- Square roots: `\sqrt{x}`
+- And many more LaTeX math commands
 
 **Advanced CSV Features:**
 
@@ -459,6 +483,36 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 ## Changelog
+
+### Version 1.2 (October 2025)
+
+#### Math Formula Rendering
+
+**LaTeX Support:**
+
+- **KaTeX Integration**: Render mathematical formulas using LaTeX notation
+  - Wrap formulas in `$...$` delimiters (e.g., `$x^2 + y^2 = z^2$`)
+  - Supports complex notation: fractions, exponents, Greek letters, trigonometric functions
+  - Examples: `$\frac{1}{x}$`, `$x^{n-1}$`, `$\sin(x)$`, `$\sqrt{1-x^2}$`
+- **Dynamic Font Sizing**: Automatically adjusts font size based on formula length
+  - Longer formulas (>100 chars) use smaller font (1rem)
+  - Medium formulas (>70 chars) use 1.2rem
+  - Shorter formulas maintain larger size for readability
+  - Ensures formulas fit on one line without wrapping
+- **Works Everywhere**: Math rendering functions on front, back, and secondary text
+- **Preserves Existing Features**: All functionality (flipping, audio, spell mode) works with math cards
+
+**Testing:**
+
+- Added 3 new e2e tests specifically for math formula rendering
+- Tests verify KaTeX elements render correctly
+- Tests confirm dynamic font sizing is applied
+- Tests ensure math formulas persist after card flip
+
+**Dependencies:**
+
+- Added `katex@^0.16.25` for math rendering
+- Added `react-katex@^3.1.0` for React integration
 
 ### Version 1.1 (October 2025)
 

@@ -132,3 +132,4 @@ If you don't have `uv` installed:
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
+- Never change "channel: 'chrome'," in  @flashcards/playwright.config.js

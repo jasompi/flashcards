@@ -1,0 +1,19 @@
+Function,Derivative
+$f(x)=c$,$f'(x)=0$
+$f(x)=x^n$,$f'(x)=nx^{n-1}$
+$f(x)=e^x$,$f'(x)=e^x$
+$f(x)=a^x$,$f'(x)=a^x \ln(a)$
+$f(x)=\ln(x)$,$f'(x)=\frac{1}{x}$
+$f(x)=\log_a(x)$,$f'(x)=\frac{1}{x \ln(a)}$
+$f(x)=\sin(x)$,$f'(x)=\cos(x)$
+$f(x)=\cos(x)$,$f'(x)=-\sin(x)$
+$f(x)=\tan(x)$,$f'(x)=\sec^2(x)$
+$f(x)=\cot(x)$,$f'(x)=-\csc^2(x)$
+$f(x)=\sec(x)$,$f'(x)=\sec(x) \tan(x)$
+$f(x)=\csc(x)$,$f'(x)=-\csc(x) \cot(x)$
+$f(x)=\sin^{-1}(x)$,$f'(x)=\frac{1}{\sqrt{1-x^2}}$
+$f(x)=\cos^{-1}(x)$,$f'(x)=-\frac{1}{\sqrt{1-x^2}}$
+$f(x)=\tan^{-1}(x)$,$f'(x)=\frac{1}{1+x^2}$
+$f(x)=\cot^{-1}(x)$,$f'(x)=-\frac{1}{1+x^2}$
+$f(x)=\sec^{-1}(x)$,$f'(x)=\frac{1}{|x|\sqrt{x^2-1}}$
+$f(x)=\csc^{-1}(x)$,$f'(x)=-\frac{1}{|x|\sqrt{x^2-1}}$
