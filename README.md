@@ -136,11 +136,54 @@ goodbye,adiós
 thank you,gracias
 ```
 
+**Advanced CSV Features:**
+
+**Secondary Text Display:**
+
+Add additional columns with headers ending in "1" or "2" to show secondary text below the primary text on cards:
+
+- Headers ending in "1" (e.g., "Pinyin 1", "Extra Info 1") show secondary text on the **front** of the card (column 1)
+- Headers ending in "2" (e.g., "English Meaning 2", "Hint 2") show secondary text on the **back** of the card (column 2)
+
+```csv
+Chinese,Pinyin 1,English Meaning 2
+装饰,zhuāngshì,Decoration; to decorate
+考古,kǎogǔ,Archaeology
+```
+
+In this example:
+- Front shows "装饰" with "zhuāngshì" below it (secondary text)
+- Back shows "Archaeology" with no secondary text
+
+**Audio Column Mapping:**
+
+By default, each card face uses its own column's text to retrieve audio files. You can override this by adding a number to the column header:
+
+- Headers ending with a number (e.g., "Pinyin 1", "English 3") use that column's text for audio retrieval
+- The number refers to the column position (1-based): 1 = first column, 2 = second column, etc.
+
+```csv
+Chinese,Pinyin 1,English Meaning 2
+田租,tián zū,land rent
+```
+
+In this example:
+- Front displays "田租" but uses column 1 (itself) for audio → plays "田租.wav"
+- Back displays "tián zū" but uses column 1 ("Chinese") for audio → plays "田租.wav"
+- Both sides share the same audio file
+
+**Rules:**
+- If the referenced column is out of range or empty, no audio button appears
+- Numbers in secondary text headers (ending in "1" or "2") control secondary text display only
+- Numbers in primary headers (first two columns) control audio retrieval only
+- Audio always uses the primary text (not secondary text) for the specified column
+
 **Notes:**
 - First row is the header (column names)
 - Column headers are used for language detection (e.g., "Spanish", "English", "Chinese")
-- You can have more than 2 columns (use `--ignore` to skip columns when generating audio)
+- You can have more than 2 columns for secondary text and audio mapping
 - For Chinese cards, include headers like "Chinese" or "中文" for language detection
+- CSV cells containing commas must be quoted (e.g., "Yuanmou (a county in Yunnan, famous for Yuanmou Man)")
 
 ### 2. Generate Audio Files (Optional)
 
@@ -419,9 +462,42 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ### Version 1.1 (October 2025)
 
+#### Secondary Text & Audio Column Mapping
+
+**Advanced CSV Features:**
+
+- **Secondary Text Display**: Show additional text below primary text on flashcards
+  - Add columns with headers ending in "1" or "2" (e.g., "Pinyin 1", "English Meaning 2")
+  - Headers ending in "1" display secondary text on front of card (column 1)
+  - Headers ending in "2" display secondary text on back of card (column 2)
+  - Secondary text appears below primary text in smaller italic font
+  - Automatically wraps for long text
+  - Shows/hides together with primary text in Spell Mode
+
+- **Audio Column Mapping**: Control which column's text is used for audio retrieval
+  - Add a number to column headers (e.g., "Pinyin 1") to reference a different column for audio
+  - Number refers to column position (1-based): 1 = first column, 2 = second column, etc.
+  - Example: "Pinyin 1" displays pinyin but plays audio for Chinese characters (column 1)
+  - Both sides can reference the same column to share audio files
+  - No audio button shown if referenced column is out of range or empty
+  - Properly handles quoted CSV fields with commas
+
+**CSV Parsing Improvements:**
+
+- Added robust CSV parser supporting quoted fields with commas
+- Handles escaped quotes (double quotes) within quoted fields
+- Example: `"Yuanmou (a county in Yunnan, famous for Yuanmou Man)"` parses correctly as single field
+
+**UI Enhancements:**
+
+- Audio button only shown when audio file is actually available (checks content-type header)
+- Secondary text styled with smaller font, italic, and slight opacity
+- Responsive font sizing for secondary text on mobile devices
+
 #### Spell Mode & Enhanced Study Features
 
 **New Study Mode:**
+
 - **Spell Mode**: Audio-first learning feature for spelling practice
   - Text hidden by default when showing cards
   - Click card to reveal text and verify spelling
@@ -431,12 +507,14 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
   - Perfect for practicing spelling and pronunciation without visual cues
 
 **Visual Feedback Animations:**
+
 - **"Got It" Button**: Card nods forward 3 times (acknowledgment animation) when marking cards as memorized
 - **"Not Yet" Button**: Card shakes horizontally (disagreement animation) when marking cards as not memorized
 - Animations provide immediate tactile feedback for user actions
 - 800ms duration matching the timing of card transitions
 
 **UI Improvements:**
+
 - **Settings Panel Enhancement**: Settings panel now scrolls with page content (changed from fixed to absolute positioning)
 - **Test Mode Privacy**: Settings panel hidden during test mode to prevent mid-test configuration changes
 - **Completion Screen Styling**:
@@ -459,6 +537,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
   - Visual consistency helps reinforce which side of the card is showing
 
 **Testing:**
+
 - Added comprehensive e2e tests for Spell Mode (6 new test cases)
 - Added e2e tests for completion screens and test mode (5 new test cases)
 - Updated timing in tests to account for new animation durations (800ms + transitions)
@@ -467,6 +546,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 - All tests passing with proper animation wait times
 
 **Bug Fixes:**
+
 - Fixed audio NotAllowedError handling for browser security
 - Fixed text reveal state management in Spell Mode
 - Fixed Front/Back switch transitions to prevent text flashing
@@ -475,6 +555,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 - Fixed completion screen button text inconsistencies
 
 **Documentation:**
+
 - Updated README with Spell Mode features
 - Added comprehensive feature documentation for animations
 - Documented test running commands

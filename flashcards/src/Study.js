@@ -35,10 +35,91 @@ function Study() {
         const text = await response.text();
         const rows = text.split('\n').filter(row => row.trim() !== '');
 
+        // Helper function to parse CSV row handling quoted fields
+        const parseCSVRow = (row) => {
+          const cells = [];
+          let currentCell = '';
+          let insideQuotes = false;
+
+          for (let i = 0; i < row.length; i++) {
+            const char = row[i];
+            const nextChar = row[i + 1];
+
+            if (char === '"') {
+              if (insideQuotes && nextChar === '"') {
+                // Escaped quote (two consecutive quotes)
+                currentCell += '"';
+                i++; // Skip next quote
+              } else {
+                // Toggle quote state
+                insideQuotes = !insideQuotes;
+              }
+            } else if (char === ',' && !insideQuotes) {
+              // End of cell
+              cells.push(currentCell.trim());
+              currentCell = '';
+            } else {
+              currentCell += char;
+            }
+          }
+          // Add last cell
+          cells.push(currentCell.trim());
+          return cells;
+        };
+
+        // Parse header row to detect audio column references and secondary text columns
+        const headerRow = parseCSVRow(rows[0]);
+        let col1AudioIndex = 0;  // Default: column 1 uses its own text (index 0)
+        let col2AudioIndex = 1;  // Default: column 2 uses its own text (index 1)
+        let col1SecondaryIndex = -1;
+        let col2SecondaryIndex = -1;
+
+        // Check column 1 header for audio reference
+        const col1Tokens = headerRow[0].split(' ');
+        const col1LastToken = col1Tokens[col1Tokens.length - 1];
+        if (!isNaN(col1LastToken)) {
+          col1AudioIndex = parseInt(col1LastToken) - 1;  // Convert to 0-based index
+        }
+
+        // Check column 2 header for audio reference
+        const col2Tokens = headerRow[1].split(' ');
+        const col2LastToken = col2Tokens[col2Tokens.length - 1];
+        if (!isNaN(col2LastToken)) {
+          col2AudioIndex = parseInt(col2LastToken) - 1;
+        }
+
+        // Check remaining columns for secondary text (starting from index 2, after front/back)
+        for (let i = 2; i < headerRow.length; i++) {
+          const header = headerRow[i];
+          const tokens = header.split(' ');
+          const lastToken = tokens[tokens.length - 1];
+
+          if (lastToken === '1') {
+            col1SecondaryIndex = i;
+          } else if (lastToken === '2') {
+            col2SecondaryIndex = i;
+          }
+        }
+
+        // Helper to get audio text with validation
+        const getAudioText = (cells, audioIndex) => {
+          if (audioIndex < 0 || audioIndex >= cells.length) return null;
+          const text = cells[audioIndex]?.trim();
+          return text || null;  // Return null if empty
+        };
+
         // Skip header row and parse data
         const data = rows.slice(1).map(row => {
-          const [col1, col2] = row.split(',').map(cell => cell.trim());
-          return { front: col1, back: col2 };
+          const cells = parseCSVRow(row);
+          const cardData = {
+            front: cells[0] || '',
+            back: cells[1] || '',
+            frontAudio: getAudioText(cells, col1AudioIndex),
+            backAudio: getAudioText(cells, col2AudioIndex),
+            frontSecondary: col1SecondaryIndex >= 0 ? cells[col1SecondaryIndex] : null,
+            backSecondary: col2SecondaryIndex >= 0 ? cells[col2SecondaryIndex] : null
+          };
+          return cardData;
         });
 
         setCards(data);
@@ -541,6 +622,10 @@ function Study() {
       <FlashCard
         front={displayFrontFirst ? currentCard.front : currentCard.back}
         back={displayFrontFirst ? currentCard.back : currentCard.front}
+        frontAudioText={displayFrontFirst ? currentCard.frontAudio : currentCard.backAudio}
+        backAudioText={displayFrontFirst ? currentCard.backAudio : currentCard.frontAudio}
+        frontSecondary={displayFrontFirst ? currentCard.frontSecondary : currentCard.backSecondary}
+        backSecondary={displayFrontFirst ? currentCard.backSecondary : currentCard.frontSecondary}
         col1={currentCard.front}
         col2={currentCard.back}
         showFrontFirst={displayFrontFirst}

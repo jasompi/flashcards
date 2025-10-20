@@ -5,6 +5,22 @@
       "id": "chinese",
       "decks": [
         {
+          "name": "History I Lesson 1",
+          "file": "chinese_history_I_lesson_1.csv"
+        },
+        {
+          "name": "History I Lesson 2",
+          "file": "chinese_history_I_lesson_2.csv"
+        },
+        {
+          "name": "History I Lesson 3",
+          "file": "chinese_history_I_lesson_3.csv"
+        },
+        {
+          "name": "History I Lesson 4",
+          "file": "chinese_history_I_lesson_4.csv"
+        },
+        {
           "name": "History I Lesson 5",
           "file": "chinese_history_I_lesson_5.csv"
         }
