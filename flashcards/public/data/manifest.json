@@ -5,6 +5,10 @@
       "id": "chinese",
       "decks": [
         {
+          "name": "History Dynasties",
+          "file": "chinese_history_dynasties.csv"
+        },
+        {
           "name": "History I Lesson 1",
           "file": "chinese_history_I_lesson_1.csv"
         },
