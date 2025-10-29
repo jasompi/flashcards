@@ -486,6 +486,46 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ### Version 1.2 (October 2025)
 
+#### Multi-Deck Combination Feature
+
+**Combine Multiple Decks:**
+
+- **Multi-Select Mode**: Select and study multiple flashcard decks together in a single session
+  - Long-press any deck (300ms) to enter multi-select mode
+  - Click additional decks to add/remove from selection
+  - Visual feedback: selected decks highlighted in green, incompatible decks grayed out
+  - Study and Cancel buttons appear at bottom when in multi-select mode
+  - Hint text shown when multiple decks available: "Long press to select multiple decks"
+
+- **Deck Compatibility Validation**: Only compatible decks can be combined
+  - Compatibility based on CSV header structure (column names and audio/secondary text configuration)
+  - First selected deck sets the compatibility constraint
+  - Incompatible decks automatically disabled and visually grayed out
+  - Examples:
+    - ✅ "Spanish Vocabulary" + "Question Words" (both have Spanish/English headers)
+    - ❌ "Spanish Vocabulary" + "Countries and Capitals" (different headers: Spanish/English vs País/Capital)
+  - Extra columns (like "Notes") that aren't displayed on cards are ignored for compatibility
+  - When all decks deselected, constraint clears and all decks become selectable again
+
+- **Audio Support**: Each card plays audio from its original deck's folder
+  - Audio files searched in correct folder for each card's source deck
+  - Works seamlessly across cards from different decks in combined session
+  - Example: Chinese History Lesson 1 card uses `chinese_history_I_lesson_1/` folder, Lesson 2 uses `chinese_history_I_lesson_2/`
+
+- **Combined Study Session**: All selected decks merged into single deck
+  - Progress indicator shows "Combined: X decks" when studying multiple decks
+  - All study features work: memorization tracking, shuffle, test mode, etc.
+  - Back button returns to category view
+  - Navigation maintains proper category context
+
+**Implementation Details:**
+
+- Multi-select state management in Category view with long-press detection
+- CSV header parsing and schema comparison for compatibility checking
+- Dynamic audio path resolution based on card source deck
+- Enhanced Study component to handle comma-separated deck filenames
+- Visual styling with green selection highlights and disabled state for incompatible decks
+
 #### Math Formula Rendering
 
 **LaTeX Support:**
