@@ -65,6 +65,10 @@
           "file": "spanish_questions_words.csv"
         },
         {
+          "name": "Ser Conjugations",
+          "file": "spanish_ser_conjugations.csv"
+        },
+        {
           "name": "Speaking Countries And Capitals",
           "file": "spanish_speaking_countries_and_capitals.csv"
         },
