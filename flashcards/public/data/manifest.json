@@ -31,6 +31,18 @@
         {
           "name": "History I Lesson 6",
           "file": "chinese_history_I_lesson_6.csv"
+        },
+        {
+          "name": "History I Lesson 7",
+          "file": "chinese_history_I_lesson_7.csv"
+        },
+        {
+          "name": "History I Lesson 8",
+          "file": "chinese_history_I_lesson_8.csv"
+        },
+        {
+          "name": "History I Lesson 9",
+          "file": "chinese_history_I_lesson_9.csv"
         }
       ]
     },

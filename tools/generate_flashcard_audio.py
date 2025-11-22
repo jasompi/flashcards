@@ -176,7 +176,7 @@ def generate_audio_pcm(text, language='es-US', retries=5, backoff_factor=1, verb
                     print(f"⚠ Rate limit hit for '{text}'. Setting persistent delay to {delay}s (from Retry-After header)...")
                 else:
                     # Use exponential backoff with minimum 2 seconds for rate limits
-                    delay = max(2, backoff_factor * (2 ** i))
+                    delay = max(2, backoff_factor * (2 ** (i + 1)))
                     print(f"⚠ Rate limit hit for '{text}'. Setting persistent delay to {delay}s...")
 
                 # Update global rate limit delay to persist across requests
