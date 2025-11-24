@@ -160,14 +160,30 @@ The app will automatically render LaTeX math formulas using KaTeX with support f
 - Square roots: `\sqrt{x}`
 - And many more LaTeX math commands
 
+**Multi-Line Text:**
+
+Create multi-line flashcards using `\n` (literal backslash-n) or actual newlines in quoted CSV fields:
+
+```csv
+Question,Answer
+"What are the primary colors?","Red\nBlue\nYellow"
+"Solve:\n$x^2 + 5x + 6 = 0$","$x = -2$\n$x = -3$"
+```
+
+- Each line renders on a separate line with proper spacing
+- Works with plain text and math formulas
+- Empty lines preserved with proper spacing
+
 **Advanced CSV Features:**
 
 **Secondary Text Display:**
 
-Add additional columns with headers ending in "1" or "2" to show secondary text below the primary text on cards:
+Add additional columns with headers ending in "1", "2", "^1", or "^2" to show secondary text on cards:
 
-- Headers ending in "1" (e.g., "Pinyin 1", "Extra Info 1") show secondary text on the **front** of the card (column 1)
-- Headers ending in "2" (e.g., "English Meaning 2", "Hint 2") show secondary text on the **back** of the card (column 2)
+- Headers ending in **"1"** (e.g., "Pinyin 1", "Extra Info 1") show secondary text **below** the primary text on the **front** of the card (column 1)
+- Headers ending in **"2"** (e.g., "English Meaning 2", "Hint 2") show secondary text **below** the primary text on the **back** of the card (column 2)
+- Headers ending in **"^1"** (e.g., "Rule Name ^1") show secondary text **above** the primary text on the **front** of the card (column 1)
+- Headers ending in **"^2"** (e.g., "Category ^2") show secondary text **above** the primary text on the **back** of the card (column 2)
 
 ```csv
 Chinese,Pinyin 1,English Meaning 2
@@ -176,8 +192,17 @@ Chinese,Pinyin 1,English Meaning 2
 ```
 
 In this example:
-- Front shows "装饰" with "zhuāngshì" below it (secondary text)
+- Front shows "装饰" with "zhuāngshì" **below** it (secondary text)
 - Back shows "Archaeology" with no secondary text
+
+```csv
+Function,Derivative,Rule Name ^1
+$f(x) = c$,$f'(x) = 0$,Constant Rule
+$f(x) = x^n$,$f'(x) = nx^{n-1}$,Power Rule
+```
+
+In this example:
+- Front shows "Constant Rule" **above** "$f(x) = c$" (secondary text positioned above)
 
 **Audio Column Mapping:**
 
@@ -483,6 +508,20 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 ## Changelog
+
+### Version 1.3 (November 2025)
+
+#### Multi-Line Text Support
+
+- **Multi-line flashcards**: Use `\n` or actual newlines in CSV fields to create line breaks
+- **Works with math formulas**: Combine multi-line support with LaTeX notation
+- **Improved math sizing**: Dynamic font sizing adjusted to prevent formula wrapping
+
+#### Secondary Text Positioning Control
+
+- **"^1" and "^2" notation**: Display secondary text **above** primary text (complements existing "1"/"2" for below)
+- **Use cases**: Show rule names above math formulas, category labels, or any contextual information that should be read first
+- **Example**: `Rule Name ^1` displays rule name above the formula on card front
 
 ### Version 1.2 (October 2025)
 

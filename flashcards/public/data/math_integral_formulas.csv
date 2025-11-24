@@ -1,4 +1,4 @@
-Function to Integrate ($\int f(x) dx$),Integral Formula ($\int f(x) dx$),Rule Name 1
+Function to Integrate ($\int f(x) dx$),Integral Formula ($\int f(x) dx$),Rule Name ^1
 $\int c dx$,$cx + C$,Constant Rule
 $\int x^n dx$,$\frac{x^{n+1}}{n+1} + C$,Power Rule (n != -1)
 $\int \frac{1}{x} dx$,$\ln|x| + C$,Logarithmic Rule (n = -1)

@@ -1,4 +1,4 @@
-Function,Derivative,Rule Name 1
+Function,Derivative,Rule Name ^1
 $f(x) = c$,$f'(x) = 0$,Constant Rule
 $f(x) = x^n$,$f'(x) = n x^{n-1}$,Power Rule
 $f(x) = c \cdot g(x)$,$f'(x) = c \cdot g'(x)$,Constant Multiple Rule

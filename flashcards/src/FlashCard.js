@@ -4,7 +4,7 @@ import { InlineMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 import './FlashCard.css';
 
-function FlashCard({ front, back, frontAudioText, backAudioText, frontSecondary, backSecondary, col1, col2, showFrontFirst, datasetName, isFlipped, setIsFlipped, isTransitioning, spellMode, textRevealed, setTextRevealed, effect }) {
+function FlashCard({ front, back, frontAudioText, backAudioText, frontSecondary, backSecondary, frontSecondaryAbove, backSecondaryAbove, col1, col2, showFrontFirst, datasetName, isFlipped, setIsFlipped, isTransitioning, spellMode, textRevealed, setTextRevealed, effect }) {
   const { autoPlay } = useSettings();
   const [audioAvailable, setAudioAvailable] = useState({ front: false, back: false });
   const [audio, setAudio] = useState(null);
@@ -240,8 +240,11 @@ function FlashCard({ front, back, frontAudioText, backAudioText, frontSecondary,
           )}
           <div className={`card-content ${isTransitioning ? 'transitioning' : ''} ${spellMode && !textRevealed ? 'hidden' : ''}`}
                style={{ fontSize: getDynamicFontSize(front) }}>
+            {frontSecondary && frontSecondaryAbove && (
+              <div className="card-content-secondary">{renderTextWithMath(frontSecondary)}</div>
+            )}
             <div className="card-content-primary">{renderTextWithMath(front)}</div>
-            {frontSecondary && (
+            {frontSecondary && !frontSecondaryAbove && (
               <div className="card-content-secondary">{renderTextWithMath(frontSecondary)}</div>
             )}
           </div>
@@ -259,8 +262,11 @@ function FlashCard({ front, back, frontAudioText, backAudioText, frontSecondary,
           )}
           <div className={`card-content ${isTransitioning ? 'transitioning' : ''} ${spellMode && !textRevealed ? 'hidden' : ''}`}
                style={{ fontSize: getDynamicFontSize(back) }}>
+            {backSecondary && backSecondaryAbove && (
+              <div className="card-content-secondary">{renderTextWithMath(backSecondary)}</div>
+            )}
             <div className="card-content-primary">{renderTextWithMath(back)}</div>
-            {backSecondary && (
+            {backSecondary && !backSecondaryAbove && (
               <div className="card-content-secondary">{renderTextWithMath(backSecondary)}</div>
             )}
           </div>

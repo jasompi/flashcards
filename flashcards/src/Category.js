@@ -63,17 +63,21 @@ function Category() {
     let col2Secondary = -1;
     let col1SecondaryHeader = null;
     let col2SecondaryHeader = null;
+    let col1SecondaryAbove = false;
+    let col2SecondaryAbove = false;
 
     for (let i = 2; i < headers.length; i++) {
       const tokens = headers[i].split(' ');
       const lastToken = tokens[tokens.length - 1];
-      if (lastToken === '1') {
+      if (lastToken === '1' || lastToken === '^1') {
         col1Secondary = i;
         col1SecondaryHeader = headers[i];
+        col1SecondaryAbove = lastToken === '^1';
       }
-      if (lastToken === '2') {
+      if (lastToken === '2' || lastToken === '^2') {
         col2Secondary = i;
         col2SecondaryHeader = headers[i];
+        col2SecondaryAbove = lastToken === '^2';
       }
     }
 
@@ -86,6 +90,8 @@ function Category() {
       col2AudioIndex,
       col1Secondary,
       col2Secondary,
+      col1SecondaryAbove,
+      col2SecondaryAbove,
       col1Header, // Include header name for compatibility check
       col2Header, // Include header name for compatibility check
       col1SecondaryHeader,

@@ -82,6 +82,8 @@ function Study() {
           let col2AudioIndex = 1;  // Default: column 2 uses its own text (index 1)
           let col1SecondaryIndex = -1;
           let col2SecondaryIndex = -1;
+          let col1SecondaryAbove = false;  // Default: secondary text below primary
+          let col2SecondaryAbove = false;
 
           // Check column 1 header for audio reference
           const col1Tokens = headerRow[0].split(' ');
@@ -103,10 +105,12 @@ function Study() {
             const tokens = header.split(' ');
             const lastToken = tokens[tokens.length - 1];
 
-            if (lastToken === '1') {
+            if (lastToken === '1' || lastToken === '^1') {
               col1SecondaryIndex = i;
-            } else if (lastToken === '2') {
+              col1SecondaryAbove = lastToken === '^1';
+            } else if (lastToken === '2' || lastToken === '^2') {
               col2SecondaryIndex = i;
+              col2SecondaryAbove = lastToken === '^2';
             }
           }
 
@@ -133,6 +137,8 @@ function Study() {
               backAudio: getAudioText(cells, col2AudioIndex),
               frontSecondary: col1SecondaryIndex >= 0 ? cells[col1SecondaryIndex] : null,
               backSecondary: col2SecondaryIndex >= 0 ? cells[col2SecondaryIndex] : null,
+              frontSecondaryAbove: col1SecondaryAbove,
+              backSecondaryAbove: col2SecondaryAbove,
               sourceFile: isMultiDeck ? file : null, // Track source for multi-deck
               datasetName: datasetName // Track dataset name for audio loading
             };
@@ -655,6 +661,8 @@ function Study() {
         backAudioText={displayFrontFirst ? currentCard.backAudio : currentCard.frontAudio}
         frontSecondary={displayFrontFirst ? currentCard.frontSecondary : currentCard.backSecondary}
         backSecondary={displayFrontFirst ? currentCard.backSecondary : currentCard.frontSecondary}
+        frontSecondaryAbove={displayFrontFirst ? currentCard.frontSecondaryAbove : currentCard.backSecondaryAbove}
+        backSecondaryAbove={displayFrontFirst ? currentCard.backSecondaryAbove : currentCard.frontSecondaryAbove}
         col1={currentCard.front}
         col2={currentCard.back}
         showFrontFirst={displayFrontFirst}
