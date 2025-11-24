@@ -1,0 +1,16 @@
+Function to Integrate ($\int f(x) dx$),Integral Formula ($\int f(x) dx$),Rule Name 1
+$\int c dx$,$cx + C$,Constant Rule
+$\int x^n dx$,$\frac{x^{n+1}}{n+1} + C$,Power Rule (n != -1)
+$\int \frac{1}{x} dx$,$\ln|x| + C$,Logarithmic Rule (n = -1)
+$\int e^x dx$,$e^x + C$,Exponential Rule (Base e)
+$\int a^x dx$,$\frac{a^x}{\ln(a)} + C$,Exponential Rule (Base a)
+$\int \sin(x) dx$,$-\cos(x) + C$,Sine Integral
+$\int \cos(x) dx$,$\sin(x) + C$,Cosine Integral
+$\int \tan(x) dx$,$\ln|\sec(x)| + C \text{ or } -\ln|\cos(x)| + C$,Tangent Integral
+$\int \cot(x) dx$,$\ln|\sin(x)| + C$,Cotangent Integral
+$\int \sec(x) dx$,$\ln|\sec(x) + \tan(x)| + C$,Secant Integral
+$\int \csc(x) dx$,$\ln|\csc(x) - \cot(x)| + C$,Cosecant Integral
+$\int \frac{1}{x^2 + a^2} dx$,$\frac{1}{a} \arctan\left(\frac{x}{a}\right) + C$,Inverse Tangent
+$\int \frac{1}{\sqrt{a^2 - x^2}} dx$,$\arcsin\left(\frac{x}{a}\right) + C$,Inverse Sine
+$\int udv = uv - \int vdu$,"(L)ogarithmic\n(I)nverse Trig\n(A)lgebraic (Polynomial)\n(T)rigonometric\n(E)xponential",Integration by Parts Formula
+$E_T$,$|E_T| \leq \frac{(b-a)^3}{12n^2} \cdot \max|f''(x)|$,Trapezoidal Rule Error Estimation

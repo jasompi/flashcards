@@ -1,0 +1,8 @@
+Function,Derivative,Rule Name 1
+$f(x) = c$,$f'(x) = 0$,Constant Rule
+$f(x) = x^n$,$f'(x) = n x^{n-1}$,Power Rule
+$f(x) = c \cdot g(x)$,$f'(x) = c \cdot g'(x)$,Constant Multiple Rule
+$h(x) = f(x) \pm g(x)$,$h'(x) = f'(x) \pm g'(x)$,Sum/Difference Rule
+$h(x) = f(x) g(x)$,$h'(x) = f'(x) g(x) + f(x) g'(x)$,Product Rule
+$h(x) = \frac{f(x)}{g(x)}$,$h'(x) = \frac{f'(x) g(x) - f(x) g'(x)}{[g(x)]^2}$,Quotient Rule
+$h(x) = f(g(x))$,$h'(x) = f'(g(x)) \cdot g'(x)$,Chain Rule

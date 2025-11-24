@@ -53,6 +53,14 @@
         {
           "name": "Derivative Of Common Functions",
           "file": "math_derivative_of_common_functions.csv"
+        },
+        {
+          "name": "Differentiation Rules",
+          "file": "math_differentiation_rules.csv"
+        },
+        {
+          "name": "Integral Formulas",
+          "file": "math_integral_formulas.csv"
         }
       ]
     },
