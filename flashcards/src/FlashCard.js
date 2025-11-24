@@ -165,6 +165,18 @@ function FlashCard({ front, back, frontAudioText, backAudioText, frontSecondary,
     if (!text) return '1.5rem';
 
     const length = text.length;
+    const hasMath = text.includes('$');
+
+    // Math formulas often take up more horizontal space than plain text
+    // so we reduce font size earlier for cards with math
+    if (hasMath) {
+      if (length > 80) return '0.9rem';
+      if (length > 60) return '1rem';
+      if (length > 40) return '1.1rem';
+      if (length > 30) return '1.3rem';
+      return '1.5rem';
+    }
+
     if (length > 100) return '1rem';
     if (length > 70) return '1.2rem';
     if (length > 50) return '1.4rem';
@@ -175,34 +187,41 @@ function FlashCard({ front, back, frontAudioText, backAudioText, frontSecondary,
   const renderTextWithMath = (text) => {
     if (!text) return null;
 
-    // Check if text contains LaTeX delimiters
-    const mathPattern = /\$([^$]+)\$/g;
-    if (!mathPattern.test(text)) {
-      return text; // No math, return plain text
-    }
+    // Split by newline (actual newline or literal \n sequence) to handle multi-line text
+    // We use a regex to match either \n (newline char) or \\n (literal backslash n)
+    const lines = text.split(/\n|\\n/);
 
-    // Split text into parts and render math inline
-    const parts = [];
-    let lastIndex = 0;
-    let match;
-    const regex = /\$([^$]+)\$/g;
-
-    while ((match = regex.exec(text)) !== null) {
-      // Add text before math
-      if (match.index > lastIndex) {
-        parts.push(text.substring(lastIndex, match.index));
+    return lines.map((line, lineIndex) => {
+      // Check if line contains LaTeX delimiters
+      const mathPattern = /\$([^$]+)\$/g;
+      if (!mathPattern.test(line)) {
+        // Use a non-breaking space if line is empty to maintain height
+        return <div key={lineIndex}>{line || '\u00A0'}</div>;
       }
-      // Add math formula
-      parts.push(<InlineMath key={match.index} math={match[1]} />);
-      lastIndex = match.index + match[0].length;
-    }
 
-    // Add remaining text
-    if (lastIndex < text.length) {
-      parts.push(text.substring(lastIndex));
-    }
+      // Split text into parts and render math inline
+      const parts = [];
+      let lastIndex = 0;
+      let match;
+      const regex = /\$([^$]+)\$/g;
 
-    return parts;
+      while ((match = regex.exec(line)) !== null) {
+        // Add text before math
+        if (match.index > lastIndex) {
+          parts.push(line.substring(lastIndex, match.index));
+        }
+        // Add math formula
+        parts.push(<InlineMath key={`${lineIndex}-${match.index}`} math={match[1]} />);
+        lastIndex = match.index + match[0].length;
+      }
+
+      // Add remaining text
+      if (lastIndex < line.length) {
+        parts.push(line.substring(lastIndex));
+      }
+
+      return <div key={lineIndex}>{parts}</div>;
+    });
   };
 
   return (
