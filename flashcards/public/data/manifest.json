@@ -61,6 +61,10 @@
         {
           "name": "Integral Formulas",
           "file": "math_integral_formulas.csv"
+        },
+        {
+          "name": "Trigonometry Formulas",
+          "file": "math_trigonometry_formulas.csv"
         }
       ]
     },
