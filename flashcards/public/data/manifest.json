@@ -85,8 +85,12 @@
           "file": "spanish_speaking_countries_and_capitals.csv"
         },
         {
-          "name": "Vocabulary Level 1",
-          "file": "spanish_vocabulary_level_1.csv"
+          "name": "Vocabulary Level 1 Chapter 1",
+          "file": "spanish_vocabulary_level_1_chapter_1.csv"
+        },
+        {
+          "name": "Vocabulary Level 1 Chapter 2",
+          "file": "spanish_vocabulary_level_1_chapter_2.csv"
         }
       ]
     }

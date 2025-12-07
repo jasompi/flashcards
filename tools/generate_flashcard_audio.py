@@ -115,7 +115,7 @@ def trim_audio_beginning(pcm_data, trim_ms, sample_rate, num_channels=1, sample_
     return pcm_data[trim_bytes:]
 
 
-def generate_audio_pcm(text, language='es-US', retries=5, backoff_factor=1, verbose=False):
+def generate_audio_pcm(text, language='es-US', retries=10, backoff_factor=1, verbose=False):
     """
     Generates audio PCM data from text using the Gemini TTS API.
 
