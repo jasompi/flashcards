@@ -40,6 +40,7 @@ if not API_KEY:
 
 # Global variable to track rate limit delay
 _rate_limit_delay = 0
+MIN_DELAY = 4
 
 
 def pcm_to_wav(pcm_data, sample_rate, num_channels=1, sample_width=2):
@@ -176,7 +177,7 @@ def generate_audio_pcm(text, language='es-US', retries=10, backoff_factor=1, ver
                     print(f"⚠ Rate limit hit for '{text}'. Setting persistent delay to {delay}s (from Retry-After header)...")
                 else:
                     # Use exponential backoff with minimum 2 seconds for rate limits
-                    delay = max(2, backoff_factor * (2 ** (i + 1)))
+                    delay = max(MIN_DELAY, backoff_factor * (MIN_DELAY ** (i + 1)))
                     print(f"⚠ Rate limit hit for '{text}'. Setting persistent delay to {delay}s...")
 
                 # Update global rate limit delay to persist across requests
