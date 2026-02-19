@@ -43,6 +43,10 @@
         {
           "name": "History I Lesson 9",
           "file": "chinese_history_I_lesson_9.csv"
+        },
+        {
+          "name": "History Ii Yuan Dynasty",
+          "file": "chinese_history_II_Yuan_Dynasty.csv"
         }
       ]
     },

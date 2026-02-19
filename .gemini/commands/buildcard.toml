@@ -1,0 +1,40 @@
+description = "Build and Deploy Flashcards from a CSV file"
+prompt = """
+Build new flashcards from the CSV file: {{args}}
+
+Follow these steps precisely:
+
+1. **Examine CSV Headers**: Read the first line of the CSV file: `{{args}}` to identify the exact column names.
+
+2. **Generate Audio**: Run `uv run tools/generate_flashcard_audio.py` with the CSV file path. 
+   Dynamically ignore columns that are in Pinyin, English, or Meaning in English (case-insensitive partial matches). 
+   You can use the exact column name (e.g., `--ignore "English Meaning"`) or the 1-based column index (e.g., `--ignore 2`).
+   ```bash
+   uv run tools/generate_flashcard_audio.py {{args}} --ignore [COL1] --ignore [COL2] ...
+   ```
+
+3. **Verify Audio Generation**: Verify that WAV files have been created in the corresponding directory under `flashcards/public/data/`.
+
+4. **Update Manifest**: Update the application's central manifest to include the new deck:
+   ```bash
+   uv run tools/update_manifest.py
+   ```
+
+5. **Verify Manifest**: Check `flashcards/public/data/manifest.json` to ensure the new deck entry is present and correct.
+
+6. **Local Verification**:
+   - Start the local development server: `./start.sh` (usually runs on port 3000).
+   - Use Playwright to navigate to `http://localhost:3000`.
+   - Confirm the new deck appears in the category list and functions as expected.
+
+7. **Deploy**: Sync the changes to the production server:
+   ```bash
+   ./deploy.sh
+   ```
+
+8. **Production Verification**:
+   - Use Playwright to navigate to `https://flashcards.jpimobile.com`.
+   - Verify the new deck is live and fully functional.
+
+9. **Close Browser**: Close the browser session using the appropriate tool once all verifications are complete.
+"""
