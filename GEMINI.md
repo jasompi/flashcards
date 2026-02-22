@@ -43,6 +43,13 @@ The project uses `uv` for Python dependency management.
 2.  Update the deck manifest: `uv run tools/update_manifest.py`
 3.  Generate audio for a deck: `uv run tools/generate_flashcard_audio.py <csv_file_path>`
 
+### Automated Card Creation (Skill)
+The project includes a Gemini CLI skill to automate the process of creating flashcards from an image (e.g., a photo of a textbook page).
+1.  **Usage**: Provide the image path to Gemini CLI and ask it to create flashcards.
+    *   Example: `Create flashcards from /path/to/image.jpg and name it spanish_vocabulary_ch4`
+2.  **Workflow**: The skill uses OCR to extract text, translates/pinyinifies as needed, creates the CSV file in `flashcards/public/data/`, generates audio, and updates the manifest.
+3.  **Skill Location**: `.gemini/skills/create-flashcards-from-image` (Workspace Scope)
+
 ### Testing
 1.  Run unit tests: `cd flashcards && npm test`
 2.  Run E2E tests: `cd flashcards && npm run test:e2e` (Playwright)
