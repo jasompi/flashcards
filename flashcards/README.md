@@ -107,13 +107,40 @@ flashcards/
 
 ## CSV Format
 
+### Basic Format
 ```csv
 Column1,Column2
 front text,back text
 word,translation
 ```
+The app displays Column1 on the front and Column2 on the back by default.
 
-The app displays Column1 and Column2 with consistent colors (purple for Column1, pink for Column2).
+### Advanced Header Mapping
+You can control which columns appear on which side of the card using trailing numbers in the header:
+
+- **Side Assignment**:
+  - `Header 1`: Forces column to the **Front** side.
+  - `Header 2`: Forces column to the **Back** side.
+  - The first column assigned to a side becomes the **Primary** text.
+  - The second column assigned to a side becomes the **Secondary** text.
+
+- **Secondary Text Positioning**:
+  - `Header ^1`: Front side, secondary text displayed **ABOVE** primary.
+  - `Header ^2`: Back side, secondary text displayed **ABOVE** primary.
+  - Without the `^` prefix, secondary text is displayed **BELOW** primary.
+
+- **Audio Redirection**:
+  - If a header ends in a number (e.g., `Pinyin 1`), the audio for that card side will be fetched using the text from the column index specified by that number (1-based).
+  - Example: `Chinese,Pinyin 1,English 2`
+    - Front Side: Shows "Chinese" (Primary) and "Pinyin" (Secondary).
+    - Front Audio: Uses text from Column 1 ("Chinese").
+    - Back Side: Shows "English".
+
+### Multi-line Support
+Use `\n` or `\\n` within a CSV cell to create line breaks on the card.
+
+### Math Support
+Wrap LaTeX formulas in `$...$` (e.g., `$x^2$`) for mathematical rendering.
 
 ## Technology Stack
 

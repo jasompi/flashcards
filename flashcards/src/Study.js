@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSettings } from './SettingsContext';
 import FlashCard from './FlashCard';
 import SettingsPanel from './components/SettingsPanel';
+import { mapColumns } from './utils/csvParser';
 import './Study.css';
 
 function Study() {
@@ -78,41 +79,7 @@ function Study() {
 
           // Parse header row to detect audio column references and secondary text columns
           const headerRow = parseCSVRow(rows[0]);
-          let col1AudioIndex = 0;  // Default: column 1 uses its own text (index 0)
-          let col2AudioIndex = 1;  // Default: column 2 uses its own text (index 1)
-          let col1SecondaryIndex = -1;
-          let col2SecondaryIndex = -1;
-          let col1SecondaryAbove = false;  // Default: secondary text below primary
-          let col2SecondaryAbove = false;
-
-          // Check column 1 header for audio reference
-          const col1Tokens = headerRow[0].split(' ');
-          const col1LastToken = col1Tokens[col1Tokens.length - 1];
-          if (!isNaN(col1LastToken)) {
-            col1AudioIndex = parseInt(col1LastToken) - 1;  // Convert to 0-based index
-          }
-
-          // Check column 2 header for audio reference
-          const col2Tokens = headerRow[1].split(' ');
-          const col2LastToken = col2Tokens[col2Tokens.length - 1];
-          if (!isNaN(col2LastToken)) {
-            col2AudioIndex = parseInt(col2LastToken) - 1;
-          }
-
-          // Check remaining columns for secondary text (starting from index 2, after front/back)
-          for (let i = 2; i < headerRow.length; i++) {
-            const header = headerRow[i];
-            const tokens = header.split(' ');
-            const lastToken = tokens[tokens.length - 1];
-
-            if (lastToken === '1' || lastToken === '^1') {
-              col1SecondaryIndex = i;
-              col1SecondaryAbove = lastToken === '^1';
-            } else if (lastToken === '2' || lastToken === '^2') {
-              col2SecondaryIndex = i;
-              col2SecondaryAbove = lastToken === '^2';
-            }
-          }
+          const mapping = mapColumns(headerRow);
 
           // Helper to get audio text with validation
           const getAudioText = (cells, audioIndex) => {
@@ -131,14 +98,14 @@ function Study() {
           const deckCards = rows.slice(1).map(row => {
             const cells = parseCSVRow(row);
             const cardData = {
-              front: cells[0] || '',
-              back: cells[1] || '',
-              frontAudio: getAudioText(cells, col1AudioIndex),
-              backAudio: getAudioText(cells, col2AudioIndex),
-              frontSecondary: col1SecondaryIndex >= 0 ? cells[col1SecondaryIndex] : null,
-              backSecondary: col2SecondaryIndex >= 0 ? cells[col2SecondaryIndex] : null,
-              frontSecondaryAbove: col1SecondaryAbove,
-              backSecondaryAbove: col2SecondaryAbove,
+              front: mapping.frontIndex >= 0 ? cells[mapping.frontIndex] : '',
+              back: mapping.backIndex >= 0 ? cells[mapping.backIndex] : '',
+              frontAudio: getAudioText(cells, mapping.frontAudioIndex),
+              backAudio: getAudioText(cells, mapping.backAudioIndex),
+              frontSecondary: mapping.frontSecondaryIndex >= 0 ? cells[mapping.frontSecondaryIndex] : null,
+              backSecondary: mapping.backSecondaryIndex >= 0 ? cells[mapping.backSecondaryIndex] : null,
+              frontSecondaryAbove: mapping.frontSecondaryAbove,
+              backSecondaryAbove: mapping.backSecondaryAbove,
               sourceFile: isMultiDeck ? file : null, // Track source for multi-deck
               datasetName: datasetName // Track dataset name for audio loading
             };
