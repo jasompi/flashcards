@@ -262,6 +262,23 @@ This scans all CSV files and updates `manifest.json` with categories and decks.
 
 If the app is running, refresh the page to see your new deck appear in the appropriate category.
 
+### 5. Automated Card Creation from Image (Skill)
+
+You can use the built-in Gemini CLI skill to automate the extraction of vocabulary from an image and create a flashcard deck.
+
+```bash
+# Provide an image path and a name for the deck
+Create flashcards from /Users/jasompi/Downloads/vocabulary_page.jpg and name it spanish_new_words
+```
+
+This skill will:
+- Extract text from the image using OCR
+- Format the data correctly (Spanish/English or Chinese/Pinyin/English)
+- Create the CSV file in `flashcards/public/data/`
+- Run the full buildcard workflow (Audio generation, Manifest update)
+
+---
+
 ### Example: Creating a Spanish Colors Deck
 
 ```bash
