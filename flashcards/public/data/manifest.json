@@ -45,6 +45,10 @@
           "file": "chinese_history_I_lesson_9.csv"
         },
         {
+          "name": "History Ii Lesson 15",
+          "file": "chinese_history_II_lesson_15.csv"
+        },
+        {
           "name": "History Ii Yuan Dynasty",
           "file": "chinese_history_II_Yuan_Dynasty.csv"
         }
@@ -103,6 +107,10 @@
         {
           "name": "Vocabulary Level 1 Chapter 3 Part2",
           "file": "spanish_vocabulary_level_1_chapter_3_part2.csv"
+        },
+        {
+          "name": "Vocabulary Level 1 Chapter 4",
+          "file": "spanish_vocabulary_level_1_chapter_4.csv"
         }
       ]
     }
