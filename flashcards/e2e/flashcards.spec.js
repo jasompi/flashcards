@@ -651,7 +651,8 @@ test.describe('Flashcards App - Completion and Test Screens', () => {
     await page.locator('.test-button').click();
     await page.waitForTimeout(400);
 
-    // Complete test by marking all cards
+    // Complete test by giving up on all cards (Got It is no longer available in
+    // test mode; grading now happens exclusively via the typed-answer check)
     let maxIterations = 50;
     while (maxIterations-- > 0) {
       const completionVisible = await page.locator('.completion-message').isVisible().catch(() => false);
@@ -659,10 +660,9 @@ test.describe('Flashcards App - Completion and Test Screens', () => {
         break;
       }
 
-      // Try to click Got It button
-      const checkButton = page.locator('.check-button');
-      if (await checkButton.isVisible().catch(() => false)) {
-        await checkButton.click();
+      const notYetButton = page.locator('.x-button');
+      if (await notYetButton.isVisible().catch(() => false)) {
+        await notYetButton.click();
         await page.waitForTimeout(1200);
       } else {
         break;
@@ -692,15 +692,15 @@ test.describe('Flashcards App - Completion and Test Screens', () => {
     await page.locator('.test-button').click();
     await page.waitForTimeout(400);
 
-    // Mark all cards
+    // Give up on all cards to reach the completion screen
     let maxIterations = 50;
     while (maxIterations-- > 0) {
       if (await page.locator('.completion-message').isVisible().catch(() => false)) {
         break;
       }
-      const checkButton = page.locator('.check-button');
-      if (await checkButton.isVisible().catch(() => false)) {
-        await checkButton.click();
+      const notYetButton = page.locator('.x-button');
+      if (await notYetButton.isVisible().catch(() => false)) {
+        await notYetButton.click();
         await page.waitForTimeout(1200);
       } else {
         break;
@@ -737,6 +737,138 @@ test.describe('Flashcards App - Completion and Test Screens', () => {
 
     // Verify settings panel is now hidden
     await expect(page.locator('.settings-panel')).not.toBeVisible();
+  });
+
+  test('should reveal correct answer and mark failed when typed answer is wrong', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate through category to study page
+    await page.waitForSelector('.category-button');
+    await page.locator('.category-button').first().click();
+    await page.waitForSelector('.deck-button');
+    await page.locator('.deck-button').first().click();
+
+    // Start test mode
+    await page.waitForSelector('.test-button');
+    await page.locator('.test-button').click();
+    await page.waitForTimeout(400);
+
+    // Type an obviously-wrong answer and check it
+    await page.waitForSelector('.answer-input');
+    await page.locator('.answer-input').fill('zzz_not_a_real_answer_zzz');
+    await page.locator('.answer-check .check-button').click();
+
+    // Card should flip to reveal the correct answer before advancing
+    await page.waitForTimeout(200);
+    await expect(page.locator('.flashcard')).toHaveClass(/flipped/);
+
+    // After the reveal window + sad effect + fade, it should advance
+    await page.waitForTimeout(1500 + 800 + 400);
+    await expect(page.locator('.flashcard')).not.toHaveClass(/flipped/);
+  });
+
+  test('should submit typed answer with Enter key', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate through category to study page
+    await page.waitForSelector('.category-button');
+    await page.locator('.category-button').first().click();
+    await page.waitForSelector('.deck-button');
+    await page.locator('.deck-button').first().click();
+
+    // Start test mode
+    await page.waitForSelector('.test-button');
+    await page.locator('.test-button').click();
+    await page.waitForTimeout(400);
+
+    // Press Enter after typing - should trigger the same check as clicking the button
+    await page.waitForSelector('.answer-input');
+    await page.locator('.answer-input').fill('zzz_not_a_real_answer_zzz');
+    await page.locator('.answer-input').press('Enter');
+
+    // Card should flip to reveal the correct answer, same as clicking the check button
+    await page.waitForTimeout(200);
+    await expect(page.locator('.flashcard')).toHaveClass(/flipped/);
+  });
+
+  test('should not show answer input for math cards, keeping self-grading buttons', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate to Math category
+    await page.waitForSelector('.category-button', { timeout: 5000 });
+    const categories = page.locator('.category-button');
+    const count = await categories.count();
+
+    let mathCategoryFound = false;
+    for (let i = 0; i < count; i++) {
+      const categoryName = await categories.nth(i).locator('.category-name').textContent();
+      if (categoryName.toLowerCase().includes('math')) {
+        await categories.nth(i).click();
+        mathCategoryFound = true;
+        break;
+      }
+    }
+
+    if (!mathCategoryFound) {
+      test.skip();
+      return;
+    }
+
+    await page.waitForSelector('.deck-button', { timeout: 5000 });
+    await page.locator('.deck-button').first().click();
+
+    // Start test mode
+    await page.waitForSelector('.test-button');
+    await page.locator('.test-button').click();
+    await page.waitForTimeout(400);
+
+    // No typed-answer input on math cards; self-grading buttons remain available
+    await expect(page.locator('.answer-input')).not.toBeVisible();
+    await expect(page.locator('.check-button')).toBeVisible();
+    await expect(page.locator('.x-button')).toBeVisible();
+  });
+
+  test('should reveal text instead of flipping when spelling is wrong in Spell Mode', async ({ page }) => {
+    await page.goto('/');
+
+    // Navigate through category to study page
+    await page.waitForSelector('.category-button');
+    await page.locator('.category-button').first().click();
+    await page.waitForSelector('.deck-button');
+    await page.locator('.deck-button').first().click();
+    await page.waitForSelector('.flashcard', { timeout: 5000 });
+
+    // Enable Spell Mode before starting test mode (settings panel is hidden during test mode)
+    const spellModeToggle = page.locator('.settings-panel .toggle-switch').nth(0);
+    await spellModeToggle.click();
+    await page.waitForTimeout(300);
+
+    // Confirm text is hidden by Spell Mode
+    const cardContent = page.locator('.card-content').first();
+    let opacity = await cardContent.evaluate(el => window.getComputedStyle(el).opacity);
+    expect(parseFloat(opacity)).toBeLessThan(0.01);
+
+    // Start test mode
+    await page.waitForSelector('.test-button');
+    await page.locator('.test-button').click();
+    await page.waitForTimeout(400);
+
+    // Type an obviously-wrong spelling and check it
+    await page.waitForSelector('.answer-input');
+    await page.locator('.answer-input').fill('zzz_not_a_real_spelling_zzz');
+    await page.locator('.answer-check .check-button').click();
+
+    // Card should reveal the text in place, NOT flip
+    await page.waitForTimeout(200);
+    await expect(page.locator('.flashcard')).not.toHaveClass(/flipped/);
+    opacity = await cardContent.evaluate(el => window.getComputedStyle(el).opacity);
+    expect(parseFloat(opacity)).toBeGreaterThan(0);
+
+    // After the reveal window + sad effect + fade, it should advance and re-hide on the new card
+    await page.waitForTimeout(1500 + 800 + 400);
+    await expect(page.locator('.flashcard')).not.toHaveClass(/flipped/);
+    opacity = await cardContent.evaluate(el => window.getComputedStyle(el).opacity);
+    expect(parseFloat(opacity)).toBeLessThan(0.01);
   });
 });
 

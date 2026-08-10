@@ -4,6 +4,7 @@ import { useSettings } from './SettingsContext';
 import FlashCard from './FlashCard';
 import SettingsPanel from './components/SettingsPanel';
 import { mapColumns } from './utils/csvParser';
+import { checkAnswer, hasMathContent } from './utils/answerChecker';
 import './Study.css';
 
 function Study() {
@@ -25,6 +26,8 @@ function Study() {
   const [textRevealed, setTextRevealed] = useState(false); // Track if text is revealed in spell mode
   const [displayFrontFirst, setDisplayFrontFirst] = useState(showFrontFirst); // Local state for delayed display update
   const [effect, setEffect] = useState(null); // Track current animation effect ('celebrate' or 'sad')
+  const [typedAnswer, setTypedAnswer] = useState(''); // User's typed answer in test mode
+  const answerInputRef = React.useRef(null);
 
   useEffect(() => {
     const loadCSV = async () => {
@@ -132,6 +135,13 @@ function Study() {
   useEffect(() => {
     setIsFlipped(false);
     setTextRevealed(false);
+    setTypedAnswer('');
+
+    const card = cards[activeDeck[currentDeckIndex]];
+    if (isTestMode && card && !hasMathContent(card.front) && !hasMathContent(card.back)) {
+      requestAnimationFrame(() => answerInputRef.current?.focus());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentDeckIndex, activeDeck]);
 
   // Reset text reveal when spell mode is toggled
@@ -465,6 +475,36 @@ function Study() {
     }
   };
 
+  const ANSWER_REVEAL_MS = 1500; // Longer than the 0.6s flip transition, plus reading time
+
+  const handleCheckAnswer = () => {
+    const trimmed = typedAnswer.trim();
+    const isRevealing = spellMode ? textRevealed : isFlipped;
+    if (!trimmed || isTransitioning || isRevealing) return;
+
+    const card = cards[activeDeck[currentDeckIndex]];
+    if (!card) return;
+
+    const spokenText = displayFrontFirst ? card.front : card.back;
+    const translatedText = displayFrontFirst ? card.back : card.front;
+    const correctAnswerText = spellMode ? spokenText : translatedText;
+    const isCorrect = checkAnswer(trimmed, correctAnswerText);
+    setTypedAnswer('');
+
+    if (isCorrect) {
+      handleMemorized();
+    } else {
+      if (spellMode) {
+        setTextRevealed(true);
+      } else {
+        setIsFlipped(true);
+      }
+      setTimeout(() => {
+        handleNotMemorized();
+      }, ANSWER_REVEAL_MS);
+    }
+  };
+
   const handleNext = () => {
     // Fade out content
     setIsTransitioning(true);
@@ -607,6 +647,8 @@ function Study() {
 
   const currentCardIndex = activeDeck[currentDeckIndex];
   const currentCard = cards[currentCardIndex];
+  const isMathCard = hasMathContent(currentCard.front) || hasMathContent(currentCard.back);
+  const isRevealing = spellMode ? textRevealed : isFlipped;
 
   return (
     <div className="study">
@@ -643,6 +685,35 @@ function Study() {
         effect={effect}
       />
 
+      {isTestMode && !isMathCard && (
+        <div className="answer-check">
+          <input
+            ref={answerInputRef}
+            type="text"
+            className="answer-input"
+            value={typedAnswer}
+            onChange={(e) => setTypedAnswer(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleCheckAnswer();
+              }
+            }}
+            placeholder={spellMode ? 'Type what you hear...' : 'Type your answer...'}
+            disabled={isRevealing || isTransitioning}
+            aria-label="Type your answer"
+          />
+          <button
+            onClick={handleCheckAnswer}
+            className="nav-button check-button"
+            disabled={isRevealing || isTransitioning || !typedAnswer.trim()}
+            title="Check your answer"
+          >
+            ✔
+          </button>
+        </div>
+      )}
+
       <div className="navigation">
         <button
           onClick={handlePrevious}
@@ -658,13 +729,15 @@ function Study() {
         >
           ✗<span className="button-text"> Not Yet</span>
         </button>
-        <button
-          onClick={handleMemorized}
-          className="nav-button check-button"
-          title="Memorized - remove from deck"
-        >
-          ✓<span className="button-text"> Got It</span>
-        </button>
+        {(!isTestMode || isMathCard) && (
+          <button
+            onClick={handleMemorized}
+            className="nav-button check-button"
+            title="Memorized - remove from deck"
+          >
+            ✓<span className="button-text"> Got It</span>
+          </button>
+        )}
         <button
           onClick={handleNext}
           className="nav-button next-button"
