@@ -81,6 +81,10 @@
       "id": "spanish",
       "decks": [
         {
+          "name": "100 Regular Verbs",
+          "file": "spanish_100_regular_verbs.csv"
+        },
+        {
           "name": "Questions Words",
           "file": "spanish_questions_words.csv"
         },
@@ -91,6 +95,10 @@
         {
           "name": "Speaking Countries And Capitals",
           "file": "spanish_speaking_countries_and_capitals.csv"
+        },
+        {
+          "name": "Stem Changing Verbs",
+          "file": "spanish_stem_changing_verbs.csv"
         },
         {
           "name": "Vocabulary Level 1 Chapter 1",
@@ -119,6 +127,10 @@
         {
           "name": "Vocabulary Level 1 Chapter 6",
           "file": "spanish_vocabulary_level_1_chapter_6.csv"
+        },
+        {
+          "name": "Vocabulary Level 1 Chapter 7",
+          "file": "spanish_vocabulary_level_1_chapter_7.csv"
         }
       ]
     }
