@@ -131,6 +131,10 @@
         {
           "name": "Vocabulary Level 1 Chapter 7",
           "file": "spanish_vocabulary_level_1_chapter_7.csv"
+        },
+        {
+          "name": "Vocabulary Level 1 Chapter 8",
+          "file": "spanish_vocabulary_level_1_chapter_8.csv"
         }
       ]
     }
